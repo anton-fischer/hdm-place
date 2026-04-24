@@ -6,7 +6,11 @@ import "mapbox-gl/dist/mapbox-gl.css";
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN!;
 
-export default function MapboxMap() {
+type MapboxMapProps = {
+    onMapReady: (map: mapboxgl.Map) => void;
+};
+
+export default function MapboxMap({ onMapReady }: MapboxMapProps) {
     const mapContainer = useRef<HTMLDivElement | null>(null);
     const mapRef = useRef<Map | null>(null);
 
@@ -20,13 +24,18 @@ export default function MapboxMap() {
             zoom: 15,
         });
 
-        mapRef.current.on('click', (e) => {
+        mapRef.current.on("click", (e) => {
             const lng = e.lngLat.lng;
             const lat = e.lngLat.lat;
             console.log("Click registered on coords:", lng, lat);
         });
 
+        mapRef.current.on("load", () => {
+            if (mapRef.current) onMapReady(mapRef.current);
+        });
+
         //mapRef.current.addControl(new mapboxgl.NavigationControl());
+        mapRef.current.scrollZoom.setWheelZoomRate(1.5);
 
         return () => {
             mapRef.current?.remove();
