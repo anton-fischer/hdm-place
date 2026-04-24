@@ -1,0 +1,48 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    background: rgba(20, 20, 20, 0.9);
+    border-radius: 12px;
+    width: fit-content;
+    box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.6);
+
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1;
+}
+
+.colorList {
+    display: flex;
+    gap: 8px;
+}
+
+.colorButton {
+    width: 40px;
+    height: 40px;
+    border-radius: 6px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: transform 0.1s, border 0.2s;
+}
+
+.colorButton:hover {
+    transform: scale(1.1);
+}
+
+.active {
+    border: 2px solid #fff;
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
+}
+
+.colorInput {
+    padding: 8px;
+    border-radius: 6px;
+    width: 72px;
+    outline: none;
+    background: #2a2a2a;
+    color: white;
+    font-family: monospace;
+}
