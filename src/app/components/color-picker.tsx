@@ -15,15 +15,18 @@ const PRESETS = [
 ];
 
 export default function ColorPicker() {
-    const [selectedColors, setSelectedColors] = useState<string[]>([]);
+    const [selectedColor, setSelectedColor] = useState("");
     const [inputValue, setInputValue] = useState("");
+    const [isCustomColorSelected, setIsCustomColorSelected] = useState(false);
 
     const toggleColor = (color: string) => {
-        setSelectedColors((prev) =>
-            prev.includes(color)
-                ? prev.filter((c) => c !== color)
-                : [...prev, color]
-        );
+        if (selectedColor === color) {
+            setSelectedColor("");
+        } else {
+            setIsCustomColorSelected(false);
+            setInputValue("");
+            setSelectedColor(color);
+        }
     };
 
     const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -32,11 +35,9 @@ export default function ColorPicker() {
 
         // validate hex input
         const isValidHex = /^#([0-9A-F]{3}){1,2}$/i.test(value);
-
         if (isValidHex) {
-            if (!selectedColors.includes(value)) {
-                setSelectedColors((prev) => [...prev, value]);
-            }
+            setIsCustomColorSelected(true);
+            setSelectedColor(value);
         }
     };
 
@@ -46,7 +47,7 @@ export default function ColorPicker() {
                 {PRESETS.map((color) => (
                     <button
                         key={color}
-                        className={`${styles.colorButton} ${selectedColors.includes(color) ? styles.active : ""}`}
+                        className={`${styles.colorButton} ${selectedColor === color ? styles.active : ""}`}
                         style={{ backgroundColor: color }}
                         onClick={() => toggleColor(color)}
                     />
@@ -54,7 +55,14 @@ export default function ColorPicker() {
                 <br />
                 <input
                     className={styles.colorInput}
+                    style={isCustomColorSelected ? {
+                        border: `2px solid ${selectedColor}`,
+                        boxShadow: "0 0 8px rgba(255, 255, 255, 0.6)"
+                    } : {
+                        border: "none"
+                    }}
                     placeholder="#ff8800"
+                    maxLength={7}
                     value={inputValue}
                     onChange={handleInput}
                 />

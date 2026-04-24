@@ -24,11 +24,11 @@ export default function MapboxMap({ onMapReady }: MapboxMapProps) {
             zoom: 15,
         });
 
-        mapRef.current.on("click", (e) => {
+        /*mapRef.current.on("click", (e) => {
             const lng = e.lngLat.lng;
             const lat = e.lngLat.lat;
             console.log("Click registered on coords:", lng, lat);
-        });
+        });*/
 
         mapRef.current.on("load", () => {
             if (mapRef.current) onMapReady(mapRef.current);

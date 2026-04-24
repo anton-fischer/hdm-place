@@ -13,12 +13,20 @@ type GridOverlayProps = {
 export default function GridOverlay({ map }: GridOverlayProps) {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
+    let currentSize = GRID_SIZE;
+
     useEffect(() => {
         const canvas = canvasRef.current!;
         const ctx = canvas.getContext("2d")!;
 
         map.on("click", (e) => {
-            // todo print coords
+            const { x, y } = e.point;
+            const lngLat = e.lngLat;
+
+            const gridX = Math.floor(x / currentSize);
+            const gridY = Math.floor(y / currentSize);
+
+            console.log(`Grid click registered: Coordinates [${lngLat.lng}|${lngLat.lat}] | Canvas Pixel [${gridX}|${gridY}]`);
         });
 
         const resize = () => {
@@ -31,13 +39,13 @@ export default function GridOverlay({ map }: GridOverlayProps) {
             resize();
 
             // stable grid size
-            const size = GRID_SIZE * Math.pow(2, map.getZoom() - GRID_ZOOM);
+            currentSize = GRID_SIZE * Math.pow(2, map.getZoom() - GRID_ZOOM);
 
             // use this as fixed reference point, attach grid there
             const origin = map.project([0, 0]);
 
-            const startX = origin.x % size;
-            const startY = origin.y % size;
+            const startX = origin.x % currentSize;
+            const startY = origin.y % currentSize;
 
             // create canvas
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -45,7 +53,7 @@ export default function GridOverlay({ map }: GridOverlayProps) {
             ctx.lineWidth = 1;
 
             // create vertical grid
-            for (let x = startX; x < canvas.width; x += size) {
+            for (let x = startX; x < canvas.width; x += currentSize) {
                 ctx.beginPath();
                 ctx.moveTo(x, 0);
                 ctx.lineTo(x, canvas.height);
@@ -53,7 +61,7 @@ export default function GridOverlay({ map }: GridOverlayProps) {
             }
 
             // create horizontal grid
-            for (let y = startY; y < canvas.height; y += size) {
+            for (let y = startY; y < canvas.height; y += currentSize) {
                 ctx.beginPath();
                 ctx.moveTo(0, y);
                 ctx.lineTo(canvas.width, y);
