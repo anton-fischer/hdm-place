@@ -8,9 +8,10 @@ const GRID_ZOOM = 15;
 
 type GridOverlayProps = {
     map: mapboxgl.Map;
+    onPlacePixel: () => void;
 };
 
-export default function GridOverlay({ map }: GridOverlayProps) {
+export default function GridOverlay({ map, onPlacePixel }: GridOverlayProps) {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
     let currentSize = GRID_SIZE;
@@ -19,7 +20,7 @@ export default function GridOverlay({ map }: GridOverlayProps) {
         const canvas = canvasRef.current!;
         const ctx = canvas.getContext("2d")!;
 
-        map.on("click", (e) => {
+        const handleGridClick = (e: mapboxgl.MapMouseEvent) => {
             const { x, y } = e.point;
             const lngLat = e.lngLat;
 
@@ -27,7 +28,9 @@ export default function GridOverlay({ map }: GridOverlayProps) {
             const gridY = Math.floor(y / currentSize);
 
             console.log(`Grid click registered: Coordinates [${lngLat.lng}|${lngLat.lat}] | Canvas Pixel [${gridX}|${gridY}]`);
-        });
+
+            onPlacePixel();
+        }
 
         const resize = () => {
             const rect = map.getContainer().getBoundingClientRect();
@@ -68,6 +71,7 @@ export default function GridOverlay({ map }: GridOverlayProps) {
                 ctx.stroke();
             }
         };
+
         const update = () => {
             resize();
             draw();
@@ -75,11 +79,13 @@ export default function GridOverlay({ map }: GridOverlayProps) {
 
         update();
 
+        map.on("click", handleGridClick)
         map.on("move", update);
         map.on("zoom", update);
         window.addEventListener("resize", update);
 
         return () => {
+            map.off("click", handleGridClick);
             map.off("move", update);
             map.off("zoom", update);
             window.removeEventListener("resize", update);

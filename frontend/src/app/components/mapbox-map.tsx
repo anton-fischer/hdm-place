@@ -17,11 +17,18 @@ export default function MapboxMap({ onMapReady }: MapboxMapProps) {
     useEffect(() => {
         if (mapRef.current || !mapContainer.current) return;
 
+        const bounds: mapboxgl.LngLatBoundsLike = [
+            [9.070903396401832, 48.73528416944094], // south west bounds
+            [9.139581464091322, 48.75982205278953]  // north east bounds
+        ];
+
         mapRef.current = new mapboxgl.Map({
             container: mapContainer.current,
             style: "mapbox://styles/mapbox/streets-v11",
             center: [9.10121285846779, 48.74130153428095],
+            //maxBounds: bounds,
             zoom: 15,
+            minZoom: 14
         });
 
         /*mapRef.current.on("click", (e) => {
