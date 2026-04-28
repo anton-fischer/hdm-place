@@ -7,11 +7,14 @@ Then run `npm run dev` to start the web app.
 
 You can access the site [here](http://localhost:3000).
 
+### Backend
+Run `npm install` to install all required packages.
+Then run `npm run dev` to start the backend application.
+
+You might have to change the port if it is already in use.
+
 ## Tech-Stack
 
-### Backend
-Run npm install to install all required packages. Then run npm run dev to start the backend app.
-You might have to change the port if it is already in use.
 ### Frontend
 - React 
 - Typescript
