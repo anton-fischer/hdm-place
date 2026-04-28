@@ -2,6 +2,9 @@
 
 ## Tech-Stack
 
+### Backend
+Run npm install to install all required packages. Then run npm run dev to start the backend app.
+You might have to change the port if it is already in use.
 ### Frontend
 - React 
 - Typescript
@@ -9,6 +12,7 @@
 ### Backend
 - Node.js 
 - Typescript
+- Nginx (Webserver)
 
 ### Data 
 - PostgreSQL
