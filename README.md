@@ -1,5 +1,12 @@
 # HDM-Place
 
+## Setup Project
+### Frontend
+Run `npm install` to install all required packages.
+Then run `npm run dev` to start the web app.
+
+You can access the site [here](http://localhost:3000).
+
 ## Tech-Stack
 
 ### Backend
