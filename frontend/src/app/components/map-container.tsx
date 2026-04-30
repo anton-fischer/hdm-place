@@ -2,6 +2,10 @@
 
 import { useState, useEffect, useRef } from "react"
 import { faTriangleExclamation, faSpinner, IconDefinition } from "@fortawesome/free-solid-svg-icons";
+import { Toaster } from "react-hot-toast";
+
+import { placePixel } from "../utils/api"
+import { notifyPromise, notifyError, notifySuccess } from "../utils/toast"
 
 import ColorPicker from "./color-picker";
 import GridOverlay from "./grid-overlay";
@@ -9,6 +13,7 @@ import MapboxMap from "./mapbox-map";
 import MessageBox from "./message-box";
 
 const COUNTDOWN_TIME = 5;
+const ENABLE_LOGGING = true;
 
 export default function MapContainer() {
     const [map, setMap] = useState<mapboxgl.Map | null>(null);
@@ -72,33 +77,6 @@ export default function MapContainer() {
         return () => clearInterval(interval);
     }, [retryTimeLeft]);
 
-    async function placePixel(x: number, y: number, color: string) {
-        const res = await fetch("http://localhost:3001/api/pixels", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                x,
-                y,
-                color,
-                userId: "abc"
-            })
-        });
-
-        console.log(`Sending POST request: x=${x}, y=${y}, color=${color}, userId=${"asd"}`);
-
-        if (!res.ok) {
-            const err = await res.json();
-            console.error("Error placing pixel:", err);
-            return false;
-        }
-
-        const pixel = await res.json();
-        console.log("Pixel placed:", pixel);
-        return true;
-    }
-
     useEffect(() => {
         setMessageText("Establishing connection...");
         setMessageIcon(faSpinner);
@@ -111,6 +89,8 @@ export default function MapContainer() {
 
             socket.onopen = () => {
                 console.log("WebSocket connected!");
+                if (ENABLE_LOGGING) notifySuccess("Established connection!");
+
                 setShowMessage(false);
                 reconnectDelayRef.current = 1000; // reset delay on success
             }
@@ -122,6 +102,7 @@ export default function MapContainer() {
 
             /*socket.onerror = (err) => {
                 console.error("WebSocket error:", err);
+                if (ENABLE_LOGGING) notifyError("WebSocket error!");
             }*/
 
             socket.onclose = (event) => {
@@ -130,6 +111,8 @@ export default function MapContainer() {
                     reason: event.reason,
                     wasClean: event.wasClean
                 });
+
+                if (ENABLE_LOGGING) notifyError("Failed to connect!");
 
                 setMessageIcon(faTriangleExclamation);
                 reconnectDelayRef.current = Math.min(reconnectDelayRef.current * 2, 30000); // max 30s
@@ -153,6 +136,13 @@ export default function MapContainer() {
 
     return (
         <div>
+            <Toaster toastOptions={{ position: "bottom-left", style: {
+                background: "rgba(20, 20, 20, 0.9)",
+                boxShadow: "0 0 20px 0 rgba(0, 0, 0, 0.6)",
+                color: "#fff",
+                backdropFilter: "blur(6px)",
+                borderRadius: "12px",
+            }}} />
             {showMessage ? <MessageBox icon={messageIcon} text={messageText} time={retryTimeLeft} /> : <ColorPicker isLocked={isLocked} timeLeft={timeLeft} selectedColor={selectedColor} setSelectedColor={setSelectedColor} />}
             <MapboxMap onMapReady={setMap} />
             {map && <GridOverlay map={map} onPlacePixel={handlePlacePixel} />}
