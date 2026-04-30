@@ -9,30 +9,61 @@ terraform {
 
 # Configure the AWS Provider
 provider "aws" {
-  region = "us-east-1"
-  access_key = AWS_ACCESS_KEY_ID
-  secret_key = AWS_SECRET_ACCESS_KEY
+  region = "eu-north-1"
+  access_key = var.AWS_access_key
+  secret_key = var.AWS_secret_key
 }
 
-# Create a VPC
-resource "aws_vpc" "example" {
-  cidr_block = "10.0.0.0/16"
+resource "aws_instance" "web-application" {
+  instance_type = "t3.micro"
+  ami           = "ami-0a0823e4ea064404d"
+  vpc_security_group_ids = [aws_security_group.app_sg.id]
+  key_name = "aws_ssh_key"
+
+  user_data = <<-EOF
+              #!/bin/bash
+              apt-get update
+              apt-get install -y docker.io docker-compose
+              systemctl start docker
+              systemctl enable docker
+              EOF
+
+  tags = {
+    Name = "HDM-Place"
+  }
 }
 
-# SSH Keys
-resource "aws_key_pair" "adrian" {
-  key_name   = "ae088@hdm-stuttgart.de"
-  public_key = file("../.ssh/adrian.pub")
-}
+# Security Group
+resource "aws_security_group" "app_sg" {
+  name = "app_sg"
 
-resource "aws_key_pair" "anton" {
-  key_name   = "af127@hdm-stuttgart.de"
-  public_key = file("../.ssh/anton.pub")
-}
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 
-resource "aws_key_pair" "erik" {
-  key_name   = "eb102@hdm-stuttgart.de"
-  public_key = file("../.ssh/erik.pub")
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["DEINE_IP/32"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 }
 
 # Billing alert to avoid unexpected cost
