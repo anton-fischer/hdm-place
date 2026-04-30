@@ -1,7 +1,7 @@
 'use client';
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCircleInfo, IconDefinition } from "@fortawesome/free-solid-svg-icons";
+import { faSpinner, IconDefinition } from "@fortawesome/free-solid-svg-icons";
 import styles from "../styles/message-box.module.css"
 
 type MessageBoxProps = {
@@ -10,7 +10,7 @@ type MessageBoxProps = {
     time?: number;
 };
 
-export default function MessageBox({ icon = faCircleInfo, text = "Placeholder", time = -1 }: MessageBoxProps) {
+export default function MessageBox({ icon = faSpinner, text = "Placeholder", time = -1 }: MessageBoxProps) {
     const formatTime = (seconds: number) => {
         const h = String(Math.floor(seconds / 3600)).padStart(2, "0");
         const m = String(Math.floor((seconds % 3600) / 60)).padStart(2, "0");
@@ -22,9 +22,9 @@ export default function MessageBox({ icon = faCircleInfo, text = "Placeholder", 
     return (
         <div className={styles.container}>
             <div className={styles.innerContainer}>
-                <FontAwesomeIcon icon={icon ?? faCircleInfo} className={styles.icon} />
+                <FontAwesomeIcon icon={icon ?? faSpinner} spin={icon === faSpinner} className={styles.icon} />
                 <div className={styles.text}>{text}</div>
-                { time >= 0 && <div className={styles.timer}>{formatTime(time)}</div> }
+                { time >= 0 ? <div className={styles.timer}>{formatTime(time)}</div> : <div></div> }
             </div>
         </div >
     );

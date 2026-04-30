@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from "react"
-import { faTriangleExclamation, IconDefinition } from "@fortawesome/free-solid-svg-icons";
+import { faTriangleExclamation, faSpinner, IconDefinition } from "@fortawesome/free-solid-svg-icons";
 
 import ColorPicker from "./color-picker";
 import GridOverlay from "./grid-overlay";
@@ -12,10 +12,12 @@ const COUNTDOWN_TIME = 5;
 
 export default function MapContainer() {
     const [map, setMap] = useState<mapboxgl.Map | null>(null);
+    const [selectedColor, setSelectedColor] = useState("");
+
     const [isLocked, setIsLocked] = useState(false);
     const [timeLeft, setTimeLeft] = useState(COUNTDOWN_TIME);
 
-    const [showMessage, setShowMessage] = useState(false);
+    const [showMessage, setShowMessage] = useState(true);
     const [messageIcon, setMessageIcon] = useState<IconDefinition | null>(null);
     const [messageText, setMessageText] = useState("");
     const [retryTimeLeft, setRetryTimeLeft] = useState(-1);
@@ -40,12 +42,17 @@ export default function MapContainer() {
         return () => clearInterval(interval);
     }, [isLocked]);
 
-    const handlePlacePixel = () => {
+    const handlePlacePixel = async (x: number, y: number) => {
+        console.log("clicked", { isLocked, selectedColor });
+
         if (isLocked) return;
 
-        placePixel();
-        setIsLocked(true);
-        setTimeLeft(5);
+        const success = await placePixel(x, y, selectedColor);
+
+        if (success) {
+            setIsLocked(true);
+            setTimeLeft(5);
+        }
     };
 
     useEffect(() => {
@@ -65,31 +72,37 @@ export default function MapContainer() {
         return () => clearInterval(interval);
     }, [retryTimeLeft]);
 
-    async function placePixel() {
+    async function placePixel(x: number, y: number, color: string) {
         const res = await fetch("http://localhost:3001/api/pixels", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                x: 1,
-                y: 1,
-                color: "#FF0000",
+                x,
+                y,
+                color,
                 userId: "abc"
             })
         });
 
+        console.log(`Sending POST request: x=${x}, y=${y}, color=${color}, userId=${"asd"}`);
+
         if (!res.ok) {
             const err = await res.json();
             console.error("Error placing pixel:", err);
-            return;
+            return false;
         }
 
         const pixel = await res.json();
         console.log("Pixel placed:", pixel);
+        return true;
     }
 
     useEffect(() => {
+        setMessageText("Establishing connection...");
+        setMessageIcon(faSpinner);
+
         let socket: WebSocket;
         let reconnectTimeout: NodeJS.Timeout;
 
@@ -130,7 +143,7 @@ export default function MapContainer() {
             }
         }
 
-        connect()
+        connect();
 
         return () => {
             if (reconnectTimeout) clearTimeout(reconnectTimeout);
@@ -140,7 +153,7 @@ export default function MapContainer() {
 
     return (
         <div>
-            {showMessage ? <MessageBox icon={messageIcon} text={messageText} time={retryTimeLeft} /> : <ColorPicker isLocked={isLocked} timeLeft={timeLeft} />}
+            {showMessage ? <MessageBox icon={messageIcon} text={messageText} time={retryTimeLeft} /> : <ColorPicker isLocked={isLocked} timeLeft={timeLeft} selectedColor={selectedColor} setSelectedColor={setSelectedColor} />}
             <MapboxMap onMapReady={setMap} />
             {map && <GridOverlay map={map} onPlacePixel={handlePlacePixel} />}
         </div>

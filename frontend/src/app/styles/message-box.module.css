@@ -38,7 +38,7 @@
 .text {
     font-family: var(--font-noto-sans);
     font-size: 13px;
-    color: #aaa;
+    color: #fff;
     letter-spacing: 0.5px;
 }
 

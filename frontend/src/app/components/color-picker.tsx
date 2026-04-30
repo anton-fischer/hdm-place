@@ -19,14 +19,15 @@ const PRESETS = [
 type ColorPickerProps = {
     isLocked: boolean;
     timeLeft: number;
+    selectedColor: string;
+    setSelectedColor: (color: string) => void;
 };
 
-export default function ColorPicker({ isLocked, timeLeft }: ColorPickerProps) {
-    const [selectedColor, setSelectedColor] = useState("");
+export default function ColorPicker({ isLocked, timeLeft, selectedColor, setSelectedColor }: ColorPickerProps) {
     const [inputValue, setInputValue] = useState("");
     const [isCustomColorSelected, setIsCustomColorSelected] = useState(false);
 
-    const toggleColor = (color: string) => {
+    const toggleColor = (color: string) => {       
         if (selectedColor === color) {
             setSelectedColor("");
         } else {

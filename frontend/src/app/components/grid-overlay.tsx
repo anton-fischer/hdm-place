@@ -8,7 +8,7 @@ const GRID_ZOOM = 15;
 
 type GridOverlayProps = {
     map: mapboxgl.Map;
-    onPlacePixel: () => void;
+    onPlacePixel: (x: number, y: number) => void;
 };
 
 export default function GridOverlay({ map, onPlacePixel }: GridOverlayProps) {
@@ -29,7 +29,7 @@ export default function GridOverlay({ map, onPlacePixel }: GridOverlayProps) {
 
             console.log(`Grid click registered: Coordinates [${lngLat.lng}|${lngLat.lat}] | Canvas Pixel [${gridX}|${gridY}]`);
 
-            onPlacePixel();
+            onPlacePixel(x, y);
         }
 
         const resize = () => {
