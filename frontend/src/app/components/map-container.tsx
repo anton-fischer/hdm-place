@@ -51,14 +51,14 @@ export default function MapContainer() {
     const handlePlacePixel = async (x: number, y: number) => {
         console.log("clicked", { isLocked, selectedColorRef: selectedColorRef.current });
 
-        if (isLocked) return;
+        if (isLocked || !selectedColorRef.current) return;
 
-        const success = await placePixel(x, y, selectedColorRef.current);
+        //const success = await placePixel(x, y, selectedColorRef.current);
 
-        if (success) {
+        //if (success) {
             setIsLocked(true);
             setTimeLeft(5);
-        }
+        //}
     };
 
     useEffect(() => {
