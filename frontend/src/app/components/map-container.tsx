@@ -28,6 +28,7 @@ export default function MapContainer() {
     const [retryTimeLeft, setRetryTimeLeft] = useState(-1);
 
     const reconnectDelayRef = useRef(1000); // start with 1s, increase with each try
+    const selectedColorRef = useRef(selectedColor);
 
     useEffect(() => {
         if (!isLocked) return;
@@ -48,17 +49,22 @@ export default function MapContainer() {
     }, [isLocked]);
 
     const handlePlacePixel = async (x: number, y: number) => {
-        console.log("clicked", { isLocked, selectedColor });
+        console.log("clicked", { isLocked, selectedColorRef: selectedColorRef.current });
 
         if (isLocked) return;
 
-        const success = await placePixel(x, y, selectedColor);
+        const success = await placePixel(x, y, selectedColorRef.current);
 
         if (success) {
             setIsLocked(true);
             setTimeLeft(5);
         }
     };
+
+    useEffect(() => {
+        // workaround needed to always have the updated values here
+        selectedColorRef.current = selectedColor;
+    }, [selectedColor]);
 
     useEffect(() => {
         if (retryTimeLeft <= 0) return;
@@ -136,13 +142,15 @@ export default function MapContainer() {
 
     return (
         <div>
-            <Toaster toastOptions={{ position: "bottom-left", style: {
-                background: "rgba(20, 20, 20, 0.9)",
-                boxShadow: "0 0 20px 0 rgba(0, 0, 0, 0.6)",
-                color: "#fff",
-                backdropFilter: "blur(6px)",
-                borderRadius: "12px",
-            }}} />
+            <Toaster toastOptions={{
+                position: "bottom-left", style: {
+                    background: "rgba(20, 20, 20, 0.9)",
+                    boxShadow: "0 0 20px 0 rgba(0, 0, 0, 0.6)",
+                    color: "#fff",
+                    backdropFilter: "blur(6px)",
+                    borderRadius: "12px",
+                }
+            }} />
             {showMessage ? <MessageBox icon={messageIcon} text={messageText} time={retryTimeLeft} /> : <ColorPicker isLocked={isLocked} timeLeft={timeLeft} selectedColor={selectedColor} setSelectedColor={setSelectedColor} />}
             <MapboxMap onMapReady={setMap} />
             {map && <GridOverlay map={map} onPlacePixel={handlePlacePixel} />}
