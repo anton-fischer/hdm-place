@@ -9,3 +9,9 @@ variable "AWS_secret_key" {
     type        = string
     sensitive   = true
 }
+
+variable "db_password" {
+    description = "Database password for RDS instance"
+    type        = string
+    sensitive   = true
+}
