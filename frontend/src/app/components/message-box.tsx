@@ -2,6 +2,7 @@
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSpinner, IconDefinition } from "@fortawesome/free-solid-svg-icons";
+
 import styles from "../styles/message-box.module.css"
 
 type MessageBoxProps = {

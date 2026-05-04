@@ -5,12 +5,14 @@ import { faTriangleExclamation, faSpinner, IconDefinition } from "@fortawesome/f
 import { Toaster } from "react-hot-toast";
 
 import { placePixel } from "../utils/api"
-import { notifyPromise, notifyError, notifySuccess } from "../utils/toast"
+import { notifyError, notifySuccess } from "../utils/toast"
 
 import ColorPicker from "./color-picker";
 import GridOverlay from "./grid-overlay";
 import MapboxMap from "./mapbox-map";
 import MessageBox from "./message-box";
+
+import styles from "../styles/map-container.module.css"
 
 const COUNTDOWN_TIME = 5;
 const ENABLE_LOGGING = true;
@@ -26,6 +28,8 @@ export default function MapContainer() {
     const [messageIcon, setMessageIcon] = useState<IconDefinition | null>(null);
     const [messageText, setMessageText] = useState("");
     const [retryTimeLeft, setRetryTimeLeft] = useState(-1);
+
+    const [lastPlacedPixel, setLastPlacedPixel] = useState(null);
 
     const reconnectDelayRef = useRef(1000); // start with 1s, increase with each try
     const selectedColorRef = useRef(selectedColor);
@@ -53,12 +57,12 @@ export default function MapContainer() {
 
         if (isLocked || !selectedColorRef.current) return;
 
-        //const success = await placePixel(x, y, selectedColorRef.current);
+        const success = await placePixel(x, y, selectedColorRef.current);
 
-        //if (success) {
+        if (success) {
             setIsLocked(true);
             setTimeLeft(5);
-        //}
+        }
     };
 
     useEffect(() => {
@@ -104,6 +108,9 @@ export default function MapContainer() {
             socket.onmessage = (event) => {
                 const data = JSON.parse(event.data);
                 console.log("WS event:", data);
+
+
+                setLastPlacedPixel(data.payload); // this will trigger an update in GridOverlay and place pixel
             }
 
             /*socket.onerror = (err) => {
@@ -153,7 +160,7 @@ export default function MapContainer() {
             }} />
             {showMessage ? <MessageBox icon={messageIcon} text={messageText} time={retryTimeLeft} /> : <ColorPicker isLocked={isLocked} timeLeft={timeLeft} selectedColor={selectedColor} setSelectedColor={setSelectedColor} />}
             <MapboxMap onMapReady={setMap} />
-            {map && <GridOverlay map={map} onPlacePixel={handlePlacePixel} />}
+            {map && <GridOverlay map={map} pixel={lastPlacedPixel} onPlacePixel={handlePlacePixel} />}
         </div>
     );
 }
