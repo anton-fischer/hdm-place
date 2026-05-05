@@ -14,6 +14,7 @@
     left: 50%;
     transform: translateX(-50%);
     z-index: 1;
+    cursor: default;
 }
 
 .innerContainer {
@@ -21,7 +22,6 @@
     align-items: center;
     justify-content: space-between;
     width: 100%;
-    cursor: wait;
 }
 
 .left {

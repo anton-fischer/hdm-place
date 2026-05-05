@@ -4,8 +4,7 @@ import { useState, useEffect, useRef } from "react"
 import { faTriangleExclamation, faSpinner, IconDefinition } from "@fortawesome/free-solid-svg-icons";
 import { Toaster } from "react-hot-toast";
 
-import { placePixel } from "../utils/api"
-import { notifyError, notifySuccess } from "../utils/toast"
+import { notifyPromise, notifyError, notifySuccess } from "../utils/toast"
 
 import ColorPicker from "./color-picker";
 import GridOverlay from "./grid-overlay";
@@ -53,15 +52,39 @@ export default function MapContainer() {
     }, [isLocked]);
 
     const handlePlacePixel = async (x: number, y: number) => {
-        console.log("clicked", { isLocked, selectedColorRef: selectedColorRef.current });
+        if (isLocked) {
+            console.warn("Grid is currently locked, not placing pixel");
+            return;
+        }
+        if (!selectedColor) {
+            console.warn("No color selected, not placing pixel");
+            return;
+        }
 
-        if (isLocked || !selectedColorRef.current) return;
+        const promise = fetch("http://localhost:3001/api/pixels", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ x, y, color: selectedColor, userId: "abc" })
+        }).then(async res => {
+            const payload = await res.json();
+            if (!res.ok) throw Object.assign(new Error(payload.error || payload.message || "Server error"), { payload });
+            return payload;
+        });
 
-        const success = await placePixel(x, y, selectedColorRef.current);
+        if (ENABLE_LOGGING) notifyPromise(promise, "Pixel placed!");
+        console.log(`Sending POST request: x=${x}, y=${y}, color=${selectedColor}`);
 
-        if (success) {
+        try {
+            const data = await promise;
+            console.log("Pixel placed:", data);
             setIsLocked(true);
-            setTimeLeft(5);
+            setTimeLeft(COUNTDOWN_TIME);
+        } catch (err: any) {
+            console.error("Error placing pixel:", err.message);
+            if (err.payload.retryAfter) {
+                setIsLocked(true);
+                setTimeLeft(err.payload.retryAfter);
+            }
         }
     };
 
@@ -109,8 +132,19 @@ export default function MapContainer() {
                 const data = JSON.parse(event.data);
                 console.log("WS event:", data);
 
-
-                setLastPlacedPixel(data.payload); // this will trigger an update in GridOverlay and place pixel
+                switch (data.type) {
+                    case "connected": {
+                        // do nothing, gets handled in socket.onopen
+                        break;
+                    }
+                    case "pixel:placed": {
+                        setLastPlacedPixel(data.payload); // this will trigger an update in GridOverlay and place pixel
+                        break;
+                    }
+                    default: {
+                        console.warn("Unknown ws message type recieved: ", data.type);
+                    }
+                }
             }
 
             /*socket.onerror = (err) => {

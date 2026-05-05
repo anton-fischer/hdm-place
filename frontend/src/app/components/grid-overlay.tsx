@@ -159,10 +159,9 @@ export default function GridOverlay({ map, pixel, onPlacePixel }: GridOverlayPro
 
     useEffect(() => {
         if (pixel) {
-            console.log("PIXEL UPDATE");
             // TODO temp for testing, pixel cache might be not performant
             //const pixel = { x: gridX, y: gridY, color: '#ff0000', placedBy: 'abc', placedAt: Date.now() };
-            console.log(pixelCacheRef.current);
+            console.log("Pixel placed, new pixel cache: ", pixelCacheRef.current);
             pixelCacheRef.current.push(pixel);
 
             updatePixel(pixel)
