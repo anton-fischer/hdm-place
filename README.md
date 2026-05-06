@@ -18,6 +18,9 @@ Run `npx prisma generate && npx prisma migrate dev` to generate the Prisma clien
 
 Then run `npm run dev` to start the backend application.
 
+### Terraform
+- Install aws cli and configure it with your credentials.
+
 ## Tech-Stack
 
 ### Frontend

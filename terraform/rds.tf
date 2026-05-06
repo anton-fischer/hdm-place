@@ -5,7 +5,7 @@ resource "aws_db_subnet_group" "hdm-place" {
 
 resource "aws_security_group" "rds" {
   name = "hdm-place-rds-sg"
-
+  vpc_id = aws_vpc.hdm-place.id
   ingress {
     from_port       = 5432
     to_port         = 5432
@@ -27,11 +27,11 @@ resource "aws_db_instance" "hdm-place" {
   engine_version    = "16"
   instance_class    = "db.t3.micro"
   allocated_storage = 20
-  storage_type      = "gp2"
+  storage_type      = "gp3"
 
-  db_name  = "hdm-place"
-  username = "hdm-place"
-  password = var.db_password
+  db_name  = "hdm_place"
+  username = "hdm_place"
+  password = var.DB_PASSWORD
 
   db_subnet_group_name   = aws_db_subnet_group.hdm-place.name
   vpc_security_group_ids = [aws_security_group.rds.id]

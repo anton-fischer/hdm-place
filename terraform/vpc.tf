@@ -19,7 +19,7 @@ resource "aws_internet_gateway" "hdm-place" {
 resource "aws_subnet" "public_a" {
   vpc_id            = aws_vpc.hdm-place.id
   cidr_block        = "10.0.1.0/24"
-  availability_zone = "eu-north-1"
+  availability_zone = "eu-north-1a"
 
   tags = {
     Name = "hdm-place-subnet-a"
@@ -29,7 +29,7 @@ resource "aws_subnet" "public_a" {
 resource "aws_subnet" "public_b" {
   vpc_id            = aws_vpc.hdm-place.id
   cidr_block        = "10.0.2.0/24"
-  availability_zone = "eu-north-1"
+  availability_zone = "eu-north-1b"
 
   tags = {
     Name = "hdm-place-subnet-b"
