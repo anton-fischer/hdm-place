@@ -22,16 +22,16 @@ export async function getTile(x1: number, y1: number, x2: number, y2: number): P
 }
 
 export async function placePixel(x: number, y: number, color: string, userId: string): Promise<PixelType> {
-    const [pixel] = await prisma.$transaction([
-        prisma.pixel.upsert({
-            where: { x_y: { x, y } },
-            update: { color, placedBy: userId, placedAt: new Date() },
-            create: { x, y, color, placedBy: userId }
-        }),
+    const [user, pixel] = await prisma.$transaction([
         prisma.user.upsert({
             where: { id: userId },
             update: { pixelCount: { increment: 1 } },
             create: { id: userId, pixelCount: 1 }
+        }),
+        prisma.pixel.upsert({
+            where: { x_y: { x, y } },
+            update: { color, placedBy: userId, placedAt: new Date() },
+            create: { x, y, color, placedBy: userId }
         })
     ])
 

@@ -14,7 +14,8 @@ Run `npm install` to install all required packages.
 
 Create `.env` file (currently exacly like .env.template)
 
-Run `npx prisma generate && npx prisma migrate dev` to generate the Prisma client.
+Run `npx prisma generate`to generate the Prisma client.
+Run `npx prisma migrate dev` to run the database migrations.
 
 Then run `npm run dev` to start the backend application.
 
