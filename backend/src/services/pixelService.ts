@@ -1,42 +1,47 @@
-import type {Pixel} from '../types/types.js'
+import type {Pixel as PixelType} from '../types/types.js'
+import { PrismaClient } from '@prisma/client'
 
-// In-memory store to be replaced by DB
-const pixels = new Map<string, Pixel>()
-const users = new Map<string, { pixelCount: number }>()
+const prisma = new PrismaClient()
 
-function key(x: number, y: number): string {
-    return `${x},${y}`
+export async function getPixel(x: number, y: number): Promise<PixelType | null> {
+    const pixel = await prisma.pixel.findUnique({
+        where: { x_y: { x, y } }
+    })
+    if (!pixel) return null
+    return { ...pixel, placedAt: pixel.placedAt.getTime() }
 }
 
-export function getPixel(x: number, y: number): Pixel | null {
-    return pixels.get(key(x, y)) ?? null
-}
-
-// Returns pixels in a rectangular area
-export function getTile(x1: number, y1: number, x2: number, y2: number): Pixel[] {
-    const result: Pixel[] = []
-    for (const pixel of pixels.values()) {
-        if (pixel.x >= x1 && pixel.x <= x2 && pixel.y >= y1 && pixel.y <= y2) {
-            result.push(pixel)
+export async function getTile(x1: number, y1: number, x2: number, y2: number): Promise<PixelType[]> {
+    const pixels = await prisma.pixel.findMany({
+        where: {
+            x: { gte: x1, lte: x2 },
+            y: { gte: y1, lte: y2 }
         }
-    }
-    return result
+    })
+    return pixels.map(p => ({ ...p, placedAt: p.placedAt.getTime() }))
 }
 
-export function placePixel(x: number, y: number, color: string, userId: string): Pixel {
-    const pixel: Pixel = { x, y, color, placedBy: userId, placedAt: Date.now() }
-    pixels.set(key(x, y), pixel)
+export async function placePixel(x: number, y: number, color: string, userId: string): Promise<PixelType> {
+    const [pixel] = await prisma.$transaction([
+        prisma.pixel.upsert({
+            where: { x_y: { x, y } },
+            update: { color, placedBy: userId, placedAt: new Date() },
+            create: { x, y, color, placedBy: userId }
+        }),
+        prisma.user.upsert({
+            where: { id: userId },
+            update: { pixelCount: { increment: 1 } },
+            create: { id: userId, pixelCount: 1 }
+        })
+    ])
 
-    // Increase user pixel count
-    const user = users.get(userId) ?? { pixelCount: 0 }
-    users.set(userId, { pixelCount: user.pixelCount + 1 })
-
-    return pixel
+    return { ...pixel, placedAt: pixel.placedAt.getTime() }
 }
 
-export function getLeaderboard(): { userId: string; pixelCount: number }[] {
-    return Array.from(users.entries())
-        .map(([userId, data]) => ({ userId, pixelCount: data.pixelCount }))
-        .sort((a, b) => b.pixelCount - a.pixelCount)
-        .slice(0, 10)
+export async function getLeaderboard() {
+    return await prisma.user.findMany({
+        orderBy: { pixelCount: 'desc' },
+        take: 10,
+        select: { id: true, pixelCount: true }
+    })
 }

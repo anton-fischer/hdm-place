@@ -10,7 +10,7 @@ export async function pixelRoutes(app: FastifyInstance) {
         const x = parseInt(req.params.x)
         const y = parseInt(req.params.y)
 
-        const pixel = getPixel(x, y)
+        const pixel = await getPixel(x, y)
         if (!pixel) {
             return reply.status(404).send({ error: 'Pixel not found' })
         }
@@ -22,7 +22,7 @@ export async function pixelRoutes(app: FastifyInstance) {
         '/api/tiles/:x1/:y1/:x2/:y2',
         async (req) => {
             const { x1, y1, x2, y2 } = req.params
-            return getTile(parseInt(x1), parseInt(y1), parseInt(x2), parseInt(y2))
+            return await getTile(parseInt(x1), parseInt(y1), parseInt(x2), parseInt(y2))
         }
     )
 
@@ -48,7 +48,7 @@ export async function pixelRoutes(app: FastifyInstance) {
                 })
             }
 
-            const pixel = placePixel(x, y, color, userId)
+            const pixel = await placePixel(x, y, color, userId)
             setCooldown(userId)
 
             // Broadcast all WebSocket-Clients the new pixel

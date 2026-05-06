@@ -8,10 +8,15 @@ Then run `npm run dev` to start the web app.
 You can access the site [here](http://localhost:3000).
 
 ### Backend
-Run `npm install` to install all required packages.
-Then run `npm run dev` to start the backend application.
+Run `docker-compose up` to start the PostgreSQL container
 
-You might have to change the port if it is already in use.
+Run `npm install` to install all required packages.
+
+Create `.env` file (currently exacly like .env.template)
+
+Run `npx prisma generate && npx prisma migrate dev` to generate the Prisma client.
+
+Then run `npm run dev` to start the backend application.
 
 ## Tech-Stack
 
