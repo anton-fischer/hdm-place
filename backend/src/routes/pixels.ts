@@ -6,9 +6,9 @@ import { broadcast } from '../websocket/handler.js'
 export async function pixelRoutes(app: FastifyInstance) {
 
     // GET /api/pixels/:x/:y – query single pixel
-    app.get<{ Params: { x: string; y: string } }>('/api/pixels/:x/:y', async (req, reply) => {
-        const x = parseInt(req.params.x)
-        const y = parseInt(req.params.y)
+    app.get<{ Params: { x: number; y: number } }>('/api/pixels/:x/:y', async (req, reply) => {
+        const x = req.params.x
+        const y = req.params.y
 
         const pixel = await getPixel(x, y)
         if (!pixel) {
@@ -18,11 +18,11 @@ export async function pixelRoutes(app: FastifyInstance) {
     })
 
     // GET /api/tiles/:x1/:y1/:x2/:y2 – Load canvas area
-    app.get<{ Params: { x1: string; y1: string; x2: string; y2: string } }>(
+    app.get<{ Params: { x1: number; y1: number; x2: number; y2: number } }>(
         '/api/tiles/:x1/:y1/:x2/:y2',
         async (req) => {
             const { x1, y1, x2, y2 } = req.params
-            return await getTile(parseInt(x1), parseInt(y1), parseInt(x2), parseInt(y2))
+            return await getTile(x1, y1, x2, y2)
         }
     )
 
