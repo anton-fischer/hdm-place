@@ -1,7 +1,45 @@
+# IDE
 .idea
-dist/
-node_modules/
-.env.local
+
+# general
+.env
+
+# backend
+backend/src/generated/prisma
+backend/node_modules
+
+# frontend
+# dependencies
+frontend/node_modules
+frontend/.pnp
+frontend.pnp.*
+frontend.yarn/*
+frontend/!.yarn/patches
+frontend/!.yarn/plugins
+frontend/!.yarn/releases
+frontend/!.yarn/versions
+# testing
+frontend/coverage
+# next.js
+frontend/.next/
+frontend/out/
+# production
+frontend/build
+# misc
+frontend/.DS_Store
+frontend/*.pem
+# debug
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/.pnpm-debug.log*
+# vercel
+frontend/.vercel
+# typescript
+frontend/*.tsbuildinfo
+frontend/next-env.d.ts
+
+# terraform
 terraform/.env
 terraform/terraform.tfstate*
 terraform/.terraform
