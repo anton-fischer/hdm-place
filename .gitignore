@@ -40,5 +40,5 @@ frontend/*.tsbuildinfo
 frontend/next-env.d.ts
 
 # terraform
-terraform/terraform.tfstate*
+terraform/*terraform.tfstate*
 terraform/.terraform
