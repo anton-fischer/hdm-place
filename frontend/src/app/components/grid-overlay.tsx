@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from "react";
+import { RefObject, useEffect, useRef } from "react";
 import mapboxgl from "mapbox-gl";
 
 import styles from "../styles/grid-overlay.module.css"
@@ -18,13 +18,13 @@ type Pixel = {
 
 type GridOverlayProps = {
     map: mapboxgl.Map;
-    pixel: Pixel | null
+    pixelCache: RefObject<Pixel[]>;
+    pixelCount: number;
     onPlacePixel: (x: number, y: number) => void;
 };
 
-export default function GridOverlay({ map, pixel, onPlacePixel }: GridOverlayProps) {
+export default function GridOverlay({ map, pixelCache, pixelCount, onPlacePixel }: GridOverlayProps) {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
-    const pixelCacheRef = useRef<Pixel[]>([]);
 
     // used to place single pixels
     // TODO maybe remove because right now its not that big of a performance improvement (grid gets rendered new at every move anyways)
@@ -52,9 +52,8 @@ export default function GridOverlay({ map, pixel, onPlacePixel }: GridOverlayPro
 
     const resize = () => {
         const canvas = canvasRef.current!;
-        const ctx = canvas.getContext("2d")!;
-
         const mapSize = map.getContainer().getBoundingClientRect();
+
         canvas.width = mapSize.width;
         canvas.height = mapSize.height;
     };
@@ -101,7 +100,7 @@ export default function GridOverlay({ map, pixel, onPlacePixel }: GridOverlayPro
         }
 
         // place cached pixels
-        for (let pixel of pixelCacheRef.current) {
+        for (let pixel of pixelCache.current) {
             // check if pixel is currently visible, else skip
             if (
                 pixel.x * TILE_SIZE < sw.x ||
@@ -158,15 +157,8 @@ export default function GridOverlay({ map, pixel, onPlacePixel }: GridOverlayPro
     }, [map, onPlacePixel]);
 
     useEffect(() => {
-        if (pixel) {
-            // TODO temp for testing, pixel cache might be not performant
-            //const pixel = { x: gridX, y: gridY, color: '#ff0000', placedBy: 'abc', placedAt: Date.now() };
-            console.log("Pixel placed, new pixel cache: ", pixelCacheRef.current);
-            pixelCacheRef.current.push(pixel);
-
-            updatePixel(pixel)
-        }
-    }, [pixel]);
+        updateGrid();
+    }, [pixelCount]);
 
     return (
         <canvas ref={canvasRef} className={styles.grid} />

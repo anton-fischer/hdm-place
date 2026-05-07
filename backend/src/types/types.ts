@@ -1,7 +1,7 @@
 export interface Pixel {
     x: number
     y: number
-    color: string       // hex, z.B. "#FF0000"
+    color: string       // hex, e.g. "#FF0000"
     placedBy: string    // userId
     placedAt: number    // timestamp
 }

@@ -5,36 +5,62 @@
 import { notifyPromise } from "./toast"
 
 const ENABLE_LOGGING = true;
+const API_URL = "http://localhost:3001";
 
-export async function placePixel(x: number, y: number, color: string) {
-    // currently implemented directly in map-container.tsx
+export async function placePixel(x: number, y: number, color: string, userId: string) {
+    const promise = fetch(`${API_URL}/api/pixel`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ x, y, color, userId })
+    }).then(async res => {
+        const payload = await res.json();
+        if (!res.ok) throw Object.assign(new Error(payload.error || payload.message || "Server error"), { payload });
+        return payload;
+    });
+
+    console.log(`Sending POST request: x=${x}, y=${y}, color=${color}, userId=${userId}`);
+    if (ENABLE_LOGGING) notifyPromise(promise, "Pixel placed!");
+
+    try {
+        return await promise;
+    } catch (err: any) {
+        console.error("Error placing pixel:", err.message);
+        throw err;
+    }
 }
 
-export async function getPixels(x1: number, y1: number, x2: number, y2: number) {
+export async function fetchPixel(x: number, y: number) {
+    const promise = fetch(`${API_URL}/api/pixel/${x}/${y}`).then(async res => {
+        const payload = await res.json();
+        if (!res.ok) throw Object.assign(new Error(payload.error || payload.message || "Server error"), { payload });
+        return payload;
+    });
+
+    console.log(`Sending GET request: (${x}, ${y})`);
+    if (ENABLE_LOGGING) notifyPromise(promise, "Pixel fetched!");
+
     try {
-        const promise = fetch("http://localhost:3001/api/tiles", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ x1, y1, x2, y2 })
-        }).then(async res => {
-            if (!res.ok) {
-                const err = await res.json();
-                throw new Error(err.error || err.message || "Server error");
-            }
-            return res.json();
-        });
+        return await promise;
+    } catch (err) {
+        console.error("Error loading pixel:", err);
+        throw err;
+    }
+}
 
-        if (ENABLE_LOGGING) notifyPromise(promise, "Pixel placed!");
+export async function fetchPixelArea(x1: number, y1: number, x2: number, y2: number) {
+    const promise = fetch(`${API_URL}/api/pixels/${x1}/${y1}/${x2}/${y2}`).then(async res => {
+        const payload = await res.json();
+        if (!res.ok) throw Object.assign(new Error(payload.error || payload.message || "Server error"), { payload });
+        return payload;
+    });
 
-        console.log(`Sending POST request: x1=${x1}, y1=${y1}, x2=${x2}, y2=${y2}`);
+    console.log(`Sending GET request: (${x1},${y1}) to (${x2},${y2})`);
+    if (ENABLE_LOGGING) notifyPromise(promise, "Pixels fetched!");
 
-        const data = await promise;
-
-        console.log("Pixels fetched:", data);
-        return data;
-
-    } catch (err: any) {
-        console.error("Error fetching pixels:", err.message);
-        return err;
+    try {
+        return await promise;
+    } catch (err) {
+        console.error("Error loading area:", err);
+        throw err;
     }
 }

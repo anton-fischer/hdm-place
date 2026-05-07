@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect, useRef } from "react"
-import { faTriangleExclamation, faSpinner, IconDefinition } from "@fortawesome/free-solid-svg-icons";
+import { faTriangleExclamation, faCircleExclamation, faSpinner, IconDefinition } from "@fortawesome/free-solid-svg-icons";
 import { Toaster } from "react-hot-toast";
 
-import { notifyPromise, notifyError, notifySuccess } from "../utils/toast"
+import { notifyError, notifySuccess } from "../utils/toast"
+import { placePixel, fetchPixelArea } from "../utils/api";
 
 import ColorPicker from "./color-picker";
 import GridOverlay from "./grid-overlay";
@@ -13,11 +14,20 @@ import MessageBox from "./message-box";
 
 import styles from "../styles/map-container.module.css"
 
-const COUNTDOWN_TIME = 5;
+const COUNTDOWN_TIME = 30;
 const ENABLE_LOGGING = true;
+
+type Pixel = {
+    x: number;
+    y: number;
+    color: string;
+    placedBy: string,
+    placedAt: number
+};
 
 export default function MapContainer() {
     const [map, setMap] = useState<mapboxgl.Map | null>(null);
+    const [pixelCount, setPixelCount] = useState(0);
     const [selectedColor, setSelectedColor] = useState("");
 
     const [isLocked, setIsLocked] = useState(false);
@@ -28,10 +38,9 @@ export default function MapContainer() {
     const [messageText, setMessageText] = useState("");
     const [retryTimeLeft, setRetryTimeLeft] = useState(-1);
 
-    const [lastPlacedPixel, setLastPlacedPixel] = useState(null);
-
     const reconnectDelayRef = useRef(1000); // start with 1s, increase with each try
     const selectedColorRef = useRef(selectedColor);
+    const pixelCacheRef = useRef<Pixel[]>([]);
 
     useEffect(() => {
         if (!isLocked) return;
@@ -61,30 +70,33 @@ export default function MapContainer() {
             return;
         }
 
-        const promise = fetch("http://localhost:3001/api/pixels", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ x, y, color: selectedColor, userId: "abc" })
-        }).then(async res => {
-            const payload = await res.json();
-            if (!res.ok) throw Object.assign(new Error(payload.error || payload.message || "Server error"), { payload });
-            return payload;
-        });
-
-        if (ENABLE_LOGGING) notifyPromise(promise, "Pixel placed!");
-        console.log(`Sending POST request: x=${x}, y=${y}, color=${selectedColor}`);
-
+        // TODO get / generate actual userid and send it
         try {
-            const data = await promise;
-            console.log("Pixel placed:", data);
+            const pixel = await placePixel(x, y, selectedColor, "userid");
+            console.log("Pixel placed:", pixel);
             setIsLocked(true);
             setTimeLeft(COUNTDOWN_TIME);
         } catch (err: any) {
-            console.error("Error placing pixel:", err.message);
             if (err.payload.retryAfter) {
                 setIsLocked(true);
                 setTimeLeft(err.payload.retryAfter);
             }
+        }
+    };
+
+    const loadData = async () => {
+        try {
+            const pixels = await fetchPixelArea(525170, 344481, 525387, 344566);
+            console.log("Pixels fetched:", pixels);
+
+            pixelCacheRef.current.push(...pixels);
+            setPixelCount(pixelCacheRef.current.length); // this will trigger an update in GridOverlay and place pixel
+
+            setShowMessage(false);
+            reconnectDelayRef.current = 1000; // reset delay on success
+        } catch (err: any) {
+            setMessageIcon(faCircleExclamation);
+            setMessageText("Error while initializing grid");
         }
     };
 
@@ -124,8 +136,8 @@ export default function MapContainer() {
                 console.log("WebSocket connected!");
                 if (ENABLE_LOGGING) notifySuccess("Established connection!");
 
-                setShowMessage(false);
-                reconnectDelayRef.current = 1000; // reset delay on success
+                // fetch pixels from database
+                loadData();
             }
 
             socket.onmessage = (event) => {
@@ -138,7 +150,8 @@ export default function MapContainer() {
                         break;
                     }
                     case "pixel:placed": {
-                        setLastPlacedPixel(data.payload); // this will trigger an update in GridOverlay and place pixel
+                        pixelCacheRef.current.push(data.payload);
+                        setPixelCount(pixelCount + 1); // this will trigger an update in GridOverlay and place pixel
                         break;
                     }
                     default: {
@@ -194,7 +207,7 @@ export default function MapContainer() {
             }} />
             {showMessage ? <MessageBox icon={messageIcon} text={messageText} time={retryTimeLeft} /> : <ColorPicker isLocked={isLocked} timeLeft={timeLeft} selectedColor={selectedColor} setSelectedColor={setSelectedColor} />}
             <MapboxMap onMapReady={setMap} />
-            {map && <GridOverlay map={map} pixel={lastPlacedPixel} onPlacePixel={handlePlacePixel} />}
+            {map && <GridOverlay map={map} pixelCache={pixelCacheRef} pixelCount={pixelCount} onPlacePixel={handlePlacePixel} />}
         </div>
     );
 }

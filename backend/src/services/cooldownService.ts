@@ -1,4 +1,4 @@
-// In-memory Cooldown – to be replaced by redis
+// In-memory Cooldown - to be replaced by redis
 // key: userId, value: timestamp when cooldown terminates
 const cooldowns = new Map<string, number>()
 

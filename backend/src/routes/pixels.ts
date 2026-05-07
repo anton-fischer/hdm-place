@@ -1,12 +1,12 @@
-import type {FastifyInstance} from 'fastify'
-import { getPixel, getTile, placePixel } from '../services/pixelService.js'
+import type { FastifyInstance } from 'fastify'
+import { getPixel, getPixels, placePixel } from '../services/pixelService.js'
 import { isOnCooldown, getRemainingCooldown, setCooldown } from '../services/cooldownService.js'
 import { broadcast } from '../websocket/handler.js'
 
 export async function pixelRoutes(app: FastifyInstance) {
 
-    // GET /api/pixels/:x/:y – query single pixel
-    app.get<{ Params: { x: number; y: number } }>('/api/pixels/:x/:y', async (req, reply) => {
+    // GET /api/pixel/:x/:y - query single pixel
+    app.get<{ Params: { x: number; y: number } }>('/api/pixel/:x/:y', async (req, reply) => {
         const x = req.params.x
         const y = req.params.y
 
@@ -17,18 +17,18 @@ export async function pixelRoutes(app: FastifyInstance) {
         return pixel
     })
 
-    // GET /api/tiles/:x1/:y1/:x2/:y2 – Load canvas area
+    // GET /api/pixels/:x1/:y1/:x2/:y2 - Load canvas area
     app.get<{ Params: { x1: number; y1: number; x2: number; y2: number } }>(
-        '/api/tiles/:x1/:y1/:x2/:y2',
+        '/api/pixels/:x1/:y1/:x2/:y2',
         async (req) => {
             const { x1, y1, x2, y2 } = req.params
-            return await getTile(x1, y1, x2, y2)
+            return await getPixels(x1, y1, x2, y2)
         }
     )
 
-    // POST /api/pixels – Place pixel
+    // POST /api/pixel - Place pixel
     app.post<{ Body: { x: number; y: number; color: string; userId: string } }>(
-        '/api/pixels',
+        '/api/pixel',
         async (req, reply) => {
             const { x, y, color, userId } = req.body
 

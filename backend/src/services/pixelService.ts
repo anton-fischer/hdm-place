@@ -1,21 +1,21 @@
-import type {Pixel as PixelType} from '../types/types.js'
+import type { Pixel as PixelType } from '../types/types.js'
 import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
 export async function getPixel(x: number, y: number): Promise<PixelType | null> {
     const pixel = await prisma.pixel.findUnique({
-        where: { x_y: { x, y } }
+        where: { x_y: { x: Number(x), y: Number(y) } }
     })
     if (!pixel) return null
     return { ...pixel, placedAt: pixel.placedAt.getTime() }
 }
 
-export async function getTile(x1: number, y1: number, x2: number, y2: number): Promise<PixelType[]> {
+export async function getPixels(x1: number, y1: number, x2: number, y2: number): Promise<PixelType[]> {
     const pixels = await prisma.pixel.findMany({
         where: {
-            x: { gte: x1, lte: x2 },
-            y: { gte: y1, lte: y2 }
+            x: { gte: Number(x1), lte: Number(x2) },
+            y: { gte: Number(y1), lte: Number(y2) }
         }
     })
     return pixels.map(p => ({ ...p, placedAt: p.placedAt.getTime() }))
@@ -29,9 +29,9 @@ export async function placePixel(x: number, y: number, color: string, userId: st
             create: { id: userId, pixelCount: 1 }
         }),
         prisma.pixel.upsert({
-            where: { x_y: { x, y } },
+            where: { x_y: { x: Number(x), y: Number(y) } },
             update: { color, placedBy: userId, placedAt: new Date() },
-            create: { x, y, color, placedBy: userId }
+            create: {  x: Number(x), y: Number(y), color, placedBy: userId }
         })
     ])
 

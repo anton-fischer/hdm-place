@@ -1,4 +1,4 @@
-import type {FastifyInstance} from 'fastify'
+import type { FastifyInstance } from 'fastify'
 import { WebSocket } from 'ws'
 import type {WebSocketEvent} from '../types/types.js'
 
@@ -17,7 +17,7 @@ export function broadcast(event: WebSocketEvent): void {
 
 export async function websocketHandler(app: FastifyInstance) {
 
-    // GET /ws – Create ws connection
+    // GET /ws - Create ws connection
     app.get('/ws', { websocket: true }, (socket) => {
         clients.add(socket)
         console.log(`Client connected. Count: ${clients.size}`)
