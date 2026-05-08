@@ -5,7 +5,7 @@ import { faTriangleExclamation, faCircleExclamation, faSpinner, IconDefinition }
 import { Toaster } from "react-hot-toast";
 
 import { notifyError, notifySuccess } from "../utils/toast"
-import { placePixel, fetchPixelArea } from "../utils/api";
+import { placePixel, fetchPixelArea, fetchCooldown } from "../utils/api";
 
 import ColorPicker from "./color-picker";
 import GridOverlay from "./grid-overlay";
@@ -70,9 +70,17 @@ export default function MapContainer() {
             return;
         }
 
-        // TODO get / generate actual userid and send it
+        // get userId from local storage (should be generated on websocket connect)
+        let userId = localStorage.getItem("userId");
+
+        if (!userId) {
+            console.warn("UserId not found in local storage, regenerating");
+            userId = crypto.randomUUID();
+            localStorage.setItem("userId", userId);
+        }
+
         try {
-            const pixel = await placePixel(x, y, selectedColor, "userid");
+            const pixel = await placePixel(x, y, selectedColor, userId);
             console.log("Pixel placed:", pixel);
             setIsLocked(true);
             setTimeLeft(COUNTDOWN_TIME);
@@ -85,6 +93,7 @@ export default function MapContainer() {
     };
 
     const loadData = async () => {
+        // load pixels
         try {
             const pixels = await fetchPixelArea(525170, 344481, 525387, 344566);
             console.log("Pixels fetched:", pixels);
@@ -92,12 +101,37 @@ export default function MapContainer() {
             pixelCacheRef.current.push(...pixels);
             setPixelCount(pixelCacheRef.current.length); // this will trigger an update in GridOverlay and place pixel
 
-            setShowMessage(false);
             reconnectDelayRef.current = 1000; // reset delay on success
         } catch (err: any) {
             setMessageIcon(faCircleExclamation);
             setMessageText("Error while initializing grid");
+            return;
         }
+
+        // load user info
+        // get userId from local storage or generate one
+        let userId = localStorage.getItem("userId");
+
+        if (!userId) {
+            console.warn("UserId not found in local storage, regenerating");
+            userId = crypto.randomUUID();
+            localStorage.setItem("userId", userId);
+        } else {
+            try {
+                const cooldown = await fetchCooldown(userId);
+                console.log("Cooldown fetched:", cooldown);
+
+                if (cooldown.isOnCooldown) {
+                    setIsLocked(true);
+                    setTimeLeft(cooldown.remainingSeconds);
+                }
+            } catch (err: any) {
+                // nothing to do
+                return;
+            }
+        }
+
+        setShowMessage(false);
     };
 
     useEffect(() => {
