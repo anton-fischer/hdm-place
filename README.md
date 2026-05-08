@@ -25,24 +25,24 @@ Then run `npm run dev` to start the backend application.
 ## Tech-Stack
 
 ### Frontend
+- Next.js
 - React 
 - Typescript
 
 ### Backend
-- Node.js 
+- Node.js
 - Typescript
-- Nginx (Webserver)
-
-### Data 
 - PostgreSQL
-- Redis (WebSockets and Rate Limiting)
 
-### Infrastructure
-- Oracle Cloud Infrastructure (OCI)
-- Docker
-- Kubernetes
-- Ingress Controller (Load Balancer)
+### AWS Services
+- EC2 (Backend)
+- RDS (Database)
+- S3 (Static files e.g. Frontend build)
+- CloudFront (CDN for static files)
+- Cognito (User authentication)
+- VPC (Virtual Private Cloud for secure network architecture)
 
 ### Deployment 
 - Github Actions
 - Terraform
+- Docker
