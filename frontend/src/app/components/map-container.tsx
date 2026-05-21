@@ -5,14 +5,16 @@ import { faTriangleExclamation, faCircleExclamation, faSpinner, IconDefinition }
 import { Toaster } from "react-hot-toast";
 
 import { notifyError, notifySuccess } from "../utils/toast"
-import { placePixel, fetchPixelArea, fetchCooldown } from "../utils/api";
+import { placePixel, fetchPixelArea, fetchCooldown, fetchPixel } from "../utils/api";
+
+import styles from "../styles/map-container.module.css"
+
+import mapboxgl from 'mapbox-gl';
 
 import ColorPicker from "./color-picker";
 import GridOverlay from "./grid-overlay";
 import MapboxMap from "./mapbox-map";
 import MessageBox from "./message-box";
-
-import styles from "../styles/map-container.module.css"
 
 const COUNTDOWN_TIME = 30;
 const ENABLE_LOGGING = true;
@@ -60,13 +62,30 @@ export default function MapContainer() {
         return () => clearInterval(interval);
     }, [isLocked]);
 
-    const handlePlacePixel = async (x: number, y: number) => {
+    const showPixelInfo = async (x: number, y: number, lang: number, lat: number) => {
+        try {
+            const pixel = await fetchPixel(x, y, true);
+            if (map) {
+                new mapboxgl.Popup({ closeOnClick: true, className: styles["popup-pixel-info"] })
+                .setLngLat([lang, lat])
+                .setHTML(`<p>Coordinates: [${pixel.x}|${pixel.y}]</p><p>Color: ${pixel.color}</p><p>Placed at: ${new Date(pixel.placedAt).toLocaleString()}</p>`)
+                .addTo(map);
+            }
+        } catch (err: any) {
+            // nothing to do
+            return;
+        }
+    }
+
+    const handlePixelClick = async (x: number, y: number, lang: number, lat: number) => {
         if (isLocked) {
             console.warn("Grid is currently locked, not placing pixel");
+            showPixelInfo(x, y, lang, lat);
             return;
         }
         if (!selectedColor) {
             console.warn("No color selected, not placing pixel");
+            showPixelInfo(x, y, lang, lat);
             return;
         }
 
@@ -251,7 +270,7 @@ export default function MapContainer() {
             }} />
             {showMessage ? <MessageBox icon={messageIcon} text={messageText} time={retryTimeLeft} /> : <ColorPicker isLocked={isLocked} timeLeft={timeLeft} selectedColor={selectedColor} setSelectedColor={setSelectedColor} />}
             <MapboxMap onMapReady={setMap} />
-            {map && <GridOverlay map={map} pixelCache={pixelCacheRef} pixelCount={pixelCount} onPlacePixel={handlePlacePixel} />}
+            {map && <GridOverlay map={map} pixelCache={pixelCacheRef} pixelCount={pixelCount} onPixelClick={handlePixelClick} />}
         </div>
     );
 }
