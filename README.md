@@ -22,6 +22,14 @@ Then run `npm run dev` to start the backend application.
 ### Terraform
 - Install aws cli and configure it with your credentials.
 
+````
+$ curl -o awscliv2.sig https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip.sig
+$ unzip awscliv2.zip
+$ sudo ./aws/install
+````
+
+Configure with Access Key ID, Secret Access Key and default region (eu-north-1).
+
 ## Tech-Stack
 
 ### Frontend
@@ -39,10 +47,20 @@ Then run `npm run dev` to start the backend application.
 - RDS (Database)
 - S3 (Static files e.g. Frontend build)
 - CloudFront (CDN for static files)
-- Cognito (User authentication)
 - VPC (Virtual Private Cloud for secure network architecture)
+- ECR (Elastic Container Registry for storing Docker images)
 
 ### Deployment 
-- Github Actions
+- GitHub Actions
 - Terraform
 - Docker
+
+Steps:
+
+Manual deployment:
+
+1. In backend directory create docker image: 
+
+`$ docker build -t hdm-place-backend .`
+
+2. 

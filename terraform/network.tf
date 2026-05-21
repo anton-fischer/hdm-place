@@ -16,26 +16,37 @@ resource "aws_internet_gateway" "hdm-place" {
   }
 }
 
+# Public Subnets for EC2 and CloudFront
 resource "aws_subnet" "public_a" {
   vpc_id            = aws_vpc.hdm-place.id
   cidr_block        = "10.0.1.0/24"
   availability_zone = "eu-north-1a"
-
-  tags = {
-    Name = "hdm-place-subnet-a"
-  }
+  tags              = { Name = "hdm-place-public-a" }
 }
 
 resource "aws_subnet" "public_b" {
   vpc_id            = aws_vpc.hdm-place.id
   cidr_block        = "10.0.2.0/24"
   availability_zone = "eu-north-1b"
-
-  tags = {
-    Name = "hdm-place-subnet-b"
-  }
+  tags              = { Name = "hdm-place-public-b" }
 }
 
+# Private Subnets for RDS
+resource "aws_subnet" "private_a" {
+  vpc_id            = aws_vpc.hdm-place.id
+  cidr_block        = "10.0.10.0/24"
+  availability_zone = "eu-north-1a"
+  tags              = { Name = "hdm-place-private-a" }
+}
+
+resource "aws_subnet" "private_b" {
+  vpc_id            = aws_vpc.hdm-place.id
+  cidr_block        = "10.0.20.0/24"
+  availability_zone = "eu-north-1b"
+  tags              = { Name = "hdm-place-private-b" }
+}
+
+# Public Subnet Routing
 resource "aws_route_table" "hdm-place" {
   vpc_id = aws_vpc.hdm-place.id
 

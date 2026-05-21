@@ -18,7 +18,7 @@ export async function getPixels(x1: number, y1: number, x2: number, y2: number):
             y: { gte: Number(y1), lte: Number(y2) }
         }
     })
-    return pixels.map(p => ({ ...p, placedAt: p.placedAt.getTime() }))
+    return pixels.map((p: any) => ({ ...p, placedAt: p.placedAt.getTime() }))
 }
 
 export async function placePixel(x: number, y: number, color: string, userId: string): Promise<PixelType> {
