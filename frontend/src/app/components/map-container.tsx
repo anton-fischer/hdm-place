@@ -156,6 +156,16 @@ export default function MapContainer() {
         return () => clearInterval(interval);
     }, [retryTimeLeft]);
 
+    const getWebSocketUrl = () => {
+        if (typeof window !== 'undefined') {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            return `${protocol}//${window.location.host}/ws`;
+        }
+        return 'ws://localhost:3000/ws';
+    };
+
+    const wsUrl = getWebSocketUrl();
+
     useEffect(() => {
         setMessageText("Establishing connection...");
         setMessageIcon(faSpinner);
@@ -164,7 +174,7 @@ export default function MapContainer() {
         let reconnectTimeout: NodeJS.Timeout;
 
         const connect = () => {
-            socket = new WebSocket("ws://localhost:3001/ws");
+            socket = new WebSocket(wsUrl);
 
             socket.onopen = () => {
                 console.log("WebSocket connected!");

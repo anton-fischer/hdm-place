@@ -1,6 +1,6 @@
 resource "aws_instance" "web-application" {
   instance_type = "t3.micro"
-  ami           = "ami-0a0823e4ea064404d"
+  ami           = "ami-05d62b9bc5a6ca605"
   vpc_security_group_ids = [aws_security_group.app_sg.id]
   subnet_id     = aws_subnet.public_a.id
   key_name = "aws-ssh"
@@ -8,10 +8,15 @@ resource "aws_instance" "web-application" {
 
   user_data = <<-EOF
               #!/bin/bash
-              apt-get update
-              apt-get install -y docker.io docker-compose
-              systemctl start docker
-              systemctl enable docker
+              sudo apt-get update
+
+              sudo apt-get install -y docker.io docker-compose
+              sudo systemctl start docker
+              sudo systemctl enable docker
+              sudo usermod -aG docker ubuntu
+
+              sudo apt install -y awscli
+
               EOF
 
   tags = {

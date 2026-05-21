@@ -18,11 +18,14 @@ ENV NODE_ENV=production
 
 COPY package*.json ./
 
+COPY prisma ./prisma
+
 RUN npm ci --only=production
+
+RUN npx prisma generate
 
 COPY --from=builder /app/dist ./dist
 
-EXPOSE 3000
+EXPOSE 3001
 
-# Starte die kompilierte Anwendung
-CMD ["node", "dist/index.js"]
+CMD npx prisma db push --accept-data-loss && node dist/index.js

@@ -5,7 +5,7 @@
 import { notifyPromise } from "./toast"
 
 const ENABLE_LOGGING = true;
-const API_URL = "http://localhost:3001";
+const API_URL = "";
 
 export async function placePixel(x: number, y: number, color: string, userId: string) {
     const promise = fetch(`${API_URL}/api/pixel`, {

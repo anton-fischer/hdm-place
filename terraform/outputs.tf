@@ -4,8 +4,8 @@ output "server_ip" {
 }
 
 output "db_endpoint" {
+  description = "The Endpoint address of the database"
   value     = aws_db_instance.hdm-place.endpoint
-  sensitive = true
 }
 
 output "ecr_url" {

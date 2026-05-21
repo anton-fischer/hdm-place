@@ -93,6 +93,24 @@ resource "aws_cloudfront_distribution" "hdm-place" {
     max_ttl     = 0
   }
 
+  ordered_cache_behavior {
+    path_pattern           = "/ws"
+    target_origin_id       = "ec2-backend"
+    allowed_methods        = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
+    cached_methods         = ["GET", "HEAD"]
+    viewer_protocol_policy = "redirect-to-https"
+
+    forwarded_values {
+      query_string = true
+      headers      = ["Sec-WebSocket-Key", "Sec-WebSocket-Version", "Sec-WebSocket-Extensions", "Sec-WebSocket-Protocol"]
+      cookies { forward = "all" }
+    }
+
+    min_ttl     = 0
+    default_ttl = 0
+    max_ttl     = 0
+  }
+
   custom_error_response {
     error_code         = 404
     response_code      = 200
