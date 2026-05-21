@@ -20,10 +20,10 @@ type GridOverlayProps = {
     map: mapboxgl.Map;
     pixelCache: RefObject<Pixel[]>;
     pixelCount: number;
-    onPlacePixel: (x: number, y: number) => void;
+    onPixelClick: (x: number, y: number, lang: number, lat: number) => void;
 };
 
-export default function GridOverlay({ map, pixelCache, pixelCount, onPlacePixel }: GridOverlayProps) {
+export default function GridOverlay({ map, pixelCache, pixelCount, onPixelClick }: GridOverlayProps) {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
     // used to place single pixels
@@ -138,7 +138,7 @@ export default function GridOverlay({ map, pixelCache, pixelCount, onPlacePixel 
 
             console.log(`Grid click registered: Coordinates [${lngLat.lng}|${lngLat.lat}] | Canvas Pixel [${gridX}|${gridY}]`);
 
-            onPlacePixel(gridX, gridY);
+            onPixelClick(gridX, gridY, lngLat.lng, lngLat.lat);
         }
 
         updateGrid();
@@ -154,7 +154,7 @@ export default function GridOverlay({ map, pixelCache, pixelCount, onPlacePixel 
             map.off("zoom", updateGrid);
             window.removeEventListener("resize", updateGrid);
         };
-    }, [map, onPlacePixel]);
+    }, [map, onPixelClick]);
 
     useEffect(() => {
         updateGrid();

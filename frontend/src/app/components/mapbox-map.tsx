@@ -4,7 +4,6 @@ import { useEffect, useRef } from "react";
 import mapboxgl, { Map } from "mapbox-gl";
 
 import "mapbox-gl/dist/mapbox-gl.css";
-import styles from "../styles/mapbox-map.module.css"
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN!;
 
