@@ -1,9 +1,9 @@
-resource "aws_db_subnet_group" "hdm-place" {
-  name       = "hdm-place-db-subnet"
-  subnet_ids = [aws_subnet.public_a.id, aws_subnet.public_b.id]
+resource "aws_db_subnet_group" "subnet_db" {
+  name       = "hdm-place-subnet-db"
+  subnet_ids = [aws_subnet.public_subnet_ec2.id, aws_subnet.public_subnet_cloudfront.id]
 }
 
-resource "aws_db_instance" "hdm-place" {
+resource "aws_db_instance" "db" {
   identifier        = "hdm-place-db"
   engine            = "postgres"
   engine_version    = "16"
@@ -15,8 +15,8 @@ resource "aws_db_instance" "hdm-place" {
   username = "hdm_place"
   password = var.DB_PASSWORD
 
-  db_subnet_group_name   = aws_db_subnet_group.hdm-place.name
-  vpc_security_group_ids = [aws_security_group.rds.id]
+  db_subnet_group_name   = aws_db_subnet_group.subnet_db.name
+  vpc_security_group_ids = [aws_security_group.sg_rds.id]
 
   multi_az            = false
   publicly_accessible = false
