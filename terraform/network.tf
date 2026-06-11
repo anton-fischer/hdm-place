@@ -65,11 +65,9 @@ resource "aws_route_table" "route_table" {
 resource "aws_route_table_association" "public_rta_ec2" {
   subnet_id      = aws_subnet.public_subnet_ec2.id
   route_table_id = aws_route_table.route_table.id
-  tags           = { Name = "hdm-place-public-rta-ec2" }
 }
 
 resource "aws_route_table_association" "public_rta_cloudfront" {
   subnet_id      = aws_subnet.public_subnet_b.id
   route_table_id = aws_route_table.route_table.id
-  tags           = { Name = "hdm-place-public-rta-cloudfront" }
 }

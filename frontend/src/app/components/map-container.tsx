@@ -165,6 +165,8 @@ export default function MapContainer() {
             // reduce time until timer hits 0, then unlock
             setRetryTimeLeft((prev) => {
                 if (prev <= 1) {
+                    setMessageText("Establishing connection...");
+                    setMessageIcon(faSpinner);                    
                     clearInterval(interval);
                     return 0;
                 }
