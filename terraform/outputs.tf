@@ -12,3 +12,8 @@ output "ecr_url" {
   description = "The repository url of the backend"
   value       = aws_ecr_repository.backend.repository_url
 }
+
+output "cloudfront_url" {
+  description = "The domain name of the cloudfront distribution"
+  value       = aws_cloudfront_distribution.hdm_place.domain_name
+}

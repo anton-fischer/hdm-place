@@ -1,6 +1,6 @@
 resource "aws_db_subnet_group" "subnet_db" {
   name       = "hdm-place-subnet-db"
-  subnet_ids = [aws_subnet.public_subnet_ec2.id, aws_subnet.public_subnet_cloudfront.id]
+  subnet_ids = [aws_subnet.private_subnet_rds.id, aws_subnet.private_subnet_b.id]
 }
 
 resource "aws_db_instance" "db" {
