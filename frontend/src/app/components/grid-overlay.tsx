@@ -157,6 +157,7 @@ export default function GridOverlay({ map, pixelCache, pixelCount, onPixelClick 
     }, [map, onPixelClick]);
 
     useEffect(() => {
+        //console.log("PIXEL COUNT UPDATE CHILD")
         updateGrid();
     }, [pixelCount]);
 

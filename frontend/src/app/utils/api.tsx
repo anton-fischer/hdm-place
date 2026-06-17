@@ -2,9 +2,9 @@
  * used to communicate with backend
 */
 
-import { notifyPromise } from "./toast"
+import { API_URL } from "../config"
 
-const API_URL = "";
+import { notifyPromise } from "./toast"
 
 export async function placePixel(x: number, y: number, color: string, userId: string, quiet: boolean = false) {
     const promise = fetch(`${API_URL}/api/pixel`, {

@@ -1,11 +1,13 @@
 'use client';
 
+import { MAPBOX_ACCESS_TOKEN } from "../config"
+
 import { useEffect, useRef } from "react";
 import mapboxgl, { Map } from "mapbox-gl";
 
 import "mapbox-gl/dist/mapbox-gl.css";
 
-mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN!;
+mapboxgl.accessToken = MAPBOX_ACCESS_TOKEN;
 
 type MapboxMapProps = {
     onMapReady: (map: mapboxgl.Map) => void;
@@ -29,7 +31,12 @@ export default function MapboxMap({ onMapReady }: MapboxMapProps) {
             center: [9.10121285846779, 48.74130153428095],
             //maxBounds: bounds,
             zoom: 15,
-            minZoom: 14
+            minZoom: 14,
+            // disable rotating grid, as this will not render the pixels correctly
+            dragRotate: false,
+            touchPitch: false,
+            pitchWithRotate: false,
+            bearing: 0
         });
 
         /*mapRef.current.on("click", (e) => {

@@ -1,5 +1,7 @@
 'use client';
 
+import { API_URL } from "../config"
+
 import { useState, useEffect, useRef } from "react"
 import { faTriangleExclamation, faCircleExclamation, faSpinner, IconDefinition } from "@fortawesome/free-solid-svg-icons";
 import { Toaster } from "react-hot-toast";
@@ -67,9 +69,9 @@ export default function MapContainer() {
             const pixel = await fetchPixel(x, y, true);
             if (map) {
                 new mapboxgl.Popup({ closeOnClick: true, className: styles["popup-pixel-info"] })
-                .setLngLat([lang, lat])
-                .setHTML(`<p>Coordinates: [${pixel.x}|${pixel.y}]</p><p>Color: ${pixel.color}</p><p>Placed at: ${new Date(pixel.placedAt).toLocaleString()}</p>`)
-                .addTo(map);
+                    .setLngLat([lang, lat])
+                    .setHTML(`<p>Coordinates: [${pixel.x}|${pixel.y}]</p><p>Color: ${pixel.color}</p><p>Placed at: ${new Date(pixel.placedAt).toLocaleString()}</p>`)
+                    .addTo(map);
             }
         } catch (err: any) {
             // nothing to do
@@ -166,7 +168,7 @@ export default function MapContainer() {
             setRetryTimeLeft((prev) => {
                 if (prev <= 1) {
                     setMessageText("Establishing connection...");
-                    setMessageIcon(faSpinner);                    
+                    setMessageIcon(faSpinner);
                     clearInterval(interval);
                     return 0;
                 }
@@ -177,16 +179,6 @@ export default function MapContainer() {
         return () => clearInterval(interval);
     }, [retryTimeLeft]);
 
-    const getWebSocketUrl = () => {
-        if (typeof window !== 'undefined') {
-            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            return `${protocol}//${window.location.host}/ws`;
-        }
-        return 'ws://localhost:3000/ws';
-    };
-
-    const wsUrl = getWebSocketUrl();
-
     useEffect(() => {
         setMessageText("Establishing connection...");
         setMessageIcon(faSpinner);
@@ -195,7 +187,7 @@ export default function MapContainer() {
         let reconnectTimeout: NodeJS.Timeout;
 
         const connect = () => {
-            socket = new WebSocket(wsUrl);
+            socket = new WebSocket(API_URL + "/ws");
 
             socket.onopen = () => {
                 console.log("WebSocket connected!");
@@ -216,7 +208,8 @@ export default function MapContainer() {
                     }
                     case "pixel:placed": {
                         pixelCacheRef.current.push(data.payload);
-                        setPixelCount(pixelCount + 1); // this will trigger an update in GridOverlay and place pixel
+                        //console.log("INCREMENT PIXEL COUNT")
+                        setPixelCount(pixelCacheRef.current.length); // this will trigger an update in GridOverlay and place pixel
                         break;
                     }
                     default: {
@@ -257,7 +250,11 @@ export default function MapContainer() {
             if (reconnectTimeout) clearTimeout(reconnectTimeout);
             if (socket) socket.close();
         }
-    }, [])
+    }, []);
+
+    /*useEffect(() => {
+        console.log("PIXEL COUNT UPDATE PARENT")
+    }, [pixelCount]);*/
 
     return (
         <div>
