@@ -1,6 +1,6 @@
 # HDM-Place
 
-## Setup Project
+## Project Setup
 ### Frontend
 Run `npm install` to install all required packages.
 Then run `npm run dev` to start the web app.
@@ -121,3 +121,11 @@ $ aws ecr delete-repository --repository-name hdm-place-backend --force
 10. Connect to Cloudfront
    
 The url should look something like this: `https://dp27jh7sg1yn5.cloudfront.net/`
+
+## Documentation 
+
+Generation of infrastructure diagramm via "Inframap" 
+
+````
+inframap generate . | dot -Tpng -Gbgcolor=transparent -Gfontname="sans-serif" -Nfontname="sans-serif" -Nfontcolor=white -Ncolor=white -Efontname="sans-serif" -Ecolor=white -Efontcolor=white > infrastructure_diagram.png
+````
