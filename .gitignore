@@ -25,7 +25,7 @@ frontend/coverage
 frontend/out/
 # production
 frontend/build
-frontend/.env.production
+frontend/.env
 # misc
 frontend/.DS_Store
 frontend/*.pem

@@ -1,3 +1,7 @@
+data "aws_ec2_managed_prefix_list" "cloudfront" {
+  name = "com.amazonaws.global.cloudfront.origin-facing"
+}
+
 # EC2 firewall
 resource "aws_security_group" "sg_ec2" {
   name = "hdm-place-sg-ec2"
@@ -15,6 +19,13 @@ resource "aws_security_group" "sg_ec2" {
     to_port     = 80
     protocol    = "tcp"
     cidr_blocks = ["141.62.0.0/16"]
+  }
+
+  ingress {
+    from_port       = 3000
+    to_port         = 3000
+    protocol        = "tcp"
+    prefix_list_ids = [data.aws_ec2_managed_prefix_list.cloudfront.id]
   }
 
   egress {
