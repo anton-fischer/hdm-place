@@ -1,9 +1,9 @@
 'use client';
 
-import { API_URL } from "../config"
+import { ENABLE_LOGGING, API_URL, COUNTDOWN_TIME } from "../config"
 
 import { useState, useEffect, useRef } from "react"
-import { faTriangleExclamation, faCircleExclamation, faSpinner, IconDefinition } from "@fortawesome/free-solid-svg-icons";
+import { faTriangleExclamation, faSpinner, IconDefinition } from "@fortawesome/free-solid-svg-icons";
 import { Toaster } from "react-hot-toast";
 
 import { notifyError, notifySuccess } from "../utils/toast"
@@ -18,8 +18,11 @@ import GridOverlay from "./grid-overlay";
 import MapboxMap from "./mapbox-map";
 import MessageBox from "./message-box";
 
-const COUNTDOWN_TIME = 30;
-const ENABLE_LOGGING = true;
+const GRID_TILE_SIZE = 0.000001; // size of a pixel in the grid
+
+const CHUNK_SIZE = 256;          // size of the chunks
+const CHUNK_PRELOAD_AMOUNT = 1;  // how many chunks shall be preloaded
+const CHUNK_LOAD_DEBOUNCE = 250; // debounce in ms
 
 type Pixel = {
     x: number;
@@ -44,7 +47,13 @@ export default function MapContainer() {
 
     const reconnectDelayRef = useRef(1000); // start with 1s, increase with each try
     const selectedColorRef = useRef(selectedColor);
+
     const pixelCacheRef = useRef<Pixel[]>([]);
+    const pixelMapRef = useRef<Map<string, Pixel>>(new Map());
+
+    const loadedChunksRef = useRef<Set<string>>(new Set());
+    const pendingChunksRef = useRef<Set<string>>(new Set());
+    const loadTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     useEffect(() => {
         if (!isLocked) return;
@@ -63,6 +72,88 @@ export default function MapContainer() {
 
         return () => clearInterval(interval);
     }, [isLocked]);
+
+    const addPixelToCache = (pixel: Pixel) => {
+        const key = `${pixel.x}:${pixel.y}`;
+
+        if (pixelMapRef.current.has(key)) {
+            pixelMapRef.current.set(key, pixel);
+            return;
+        }
+
+        pixelMapRef.current.set(key, pixel);
+        pixelCacheRef.current.push(pixel);
+        setPixelCount(pixelCacheRef.current.length);
+
+        const chunkKey = `${Math.floor(pixel.x / CHUNK_SIZE)}:${Math.floor(pixel.y / CHUNK_SIZE)}`;
+        loadedChunksRef.current.add(chunkKey);
+    };
+
+    const addPixelsToCache = (pixels: Pixel[]) => {
+        pixels.forEach(addPixelToCache);
+    };
+
+    const getVisibleChunks = (currentMap: mapboxgl.Map) => {
+        const bounds = currentMap.getBounds();
+        if (!bounds) return [];
+
+        const sw = mapboxgl.MercatorCoordinate.fromLngLat(bounds.getSouthWest());
+        const ne = mapboxgl.MercatorCoordinate.fromLngLat(bounds.getNorthEast());
+
+        const minPixelX = Math.floor(sw.x / GRID_TILE_SIZE);
+        const maxPixelX = Math.floor(ne.x / GRID_TILE_SIZE);
+        const minPixelY = Math.floor(ne.y / GRID_TILE_SIZE);
+        const maxPixelY = Math.floor(sw.y / GRID_TILE_SIZE);
+
+        const minChunkX = Math.floor(minPixelX / CHUNK_SIZE) - CHUNK_PRELOAD_AMOUNT;
+        const maxChunkX = Math.floor(maxPixelX / CHUNK_SIZE) + CHUNK_PRELOAD_AMOUNT;
+        const minChunkY = Math.floor(minPixelY / CHUNK_SIZE) - CHUNK_PRELOAD_AMOUNT;
+        const maxChunkY = Math.floor(maxPixelY / CHUNK_SIZE) + CHUNK_PRELOAD_AMOUNT;
+
+        const chunks: Array<{ x: number; y: number }> = [];
+
+        for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX += 1) {
+            for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY += 1) {
+                chunks.push({ x: chunkX, y: chunkY });
+            }
+        }
+
+        return chunks;
+    };
+
+    const fetchVisibleChunks = async (currentMap: mapboxgl.Map) => {
+        const chunks = getVisibleChunks(currentMap);
+        const missingChunks = chunks.filter(({ x, y }) => {
+            const key = `${x}:${y}`;
+            return !loadedChunksRef.current.has(key) && !pendingChunksRef.current.has(key);
+        });
+
+        if (!missingChunks.length) return;
+
+        await Promise.all(missingChunks.map(async ({ x, y }) => {
+            const key = `${x}:${y}`;
+            pendingChunksRef.current.add(key);
+
+            try {
+                const pixels = await fetchPixelArea(
+                    x * CHUNK_SIZE,
+                    y * CHUNK_SIZE,
+                    (x + 1) * CHUNK_SIZE - 1,
+                    (y + 1) * CHUNK_SIZE - 1,
+                    true
+                );
+
+                addPixelsToCache(pixels);
+                loadedChunksRef.current.add(key);
+                //console.log(`Chunk ${key} fetched with pixels: ${pixels}`);
+                console.log(`Chunk ${key} fetched with containing ${pixels.length} pixels`);
+            } catch (err) {
+                console.warn(`Could not fetch pixel chunk ${key}`, err);
+            } finally {
+                pendingChunksRef.current.delete(key);
+            }
+        }));
+    };
 
     const showPixelInfo = async (x: number, y: number, lang: number, lat: number) => {
         try {
@@ -114,20 +205,7 @@ export default function MapContainer() {
     };
 
     const loadData = async () => {
-        // load pixels
-        try {
-            const pixels = await fetchPixelArea(525170, 344481, 525387, 344566);
-            console.log("Pixels fetched:", pixels);
-
-            pixelCacheRef.current.push(...pixels);
-            setPixelCount(pixelCacheRef.current.length); // this will trigger an update in GridOverlay and place pixel
-
-            reconnectDelayRef.current = 1000; // reset delay on success
-        } catch (err: any) {
-            setMessageIcon(faCircleExclamation);
-            setMessageText("Error while initializing grid");
-            return;
-        }
+        reconnectDelayRef.current = 1000; // reset delay on success
 
         // load user info
         // get userId from local storage or generate one
@@ -154,6 +232,34 @@ export default function MapContainer() {
 
         setShowMessage(false);
     };
+
+    useEffect(() => {
+        if (!map) return;
+
+        const scheduleViewportLoad = () => {
+            if (loadTimeoutRef.current) {
+                clearTimeout(loadTimeoutRef.current);
+            }
+
+            loadTimeoutRef.current = setTimeout(() => {
+                void fetchVisibleChunks(map);
+            }, CHUNK_LOAD_DEBOUNCE);
+        };
+
+        scheduleViewportLoad();
+
+        map.on("moveend", scheduleViewportLoad);
+        map.on("zoomend", scheduleViewportLoad);
+
+        return () => {
+            if (loadTimeoutRef.current) {
+                clearTimeout(loadTimeoutRef.current);
+            }
+
+            map.off("moveend", scheduleViewportLoad);
+            map.off("zoomend", scheduleViewportLoad);
+        };
+    }, [map]);
 
     useEffect(() => {
         // workaround needed to always have the updated values here
@@ -207,9 +313,7 @@ export default function MapContainer() {
                         break;
                     }
                     case "pixel:placed": {
-                        pixelCacheRef.current.push(data.payload);
-                        //console.log("INCREMENT PIXEL COUNT")
-                        setPixelCount(pixelCacheRef.current.length); // this will trigger an update in GridOverlay and place pixel
+                        addPixelToCache(data.payload);
                         break;
                     }
                     default: {

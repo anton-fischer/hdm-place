@@ -5,8 +5,8 @@ import mapboxgl from "mapbox-gl";
 
 import styles from "../styles/grid-overlay.module.css"
 
-const TILE_SIZE = 0.000001;
-const GRID_ZOOM = 15;
+const GRID_TILE_SIZE = 0.000001; // size of a pixel in the grid
+const GRID_ZOOM = 15;            // inital zoom of the map
 
 type Pixel = {
     x: number;
@@ -25,30 +25,6 @@ type GridOverlayProps = {
 
 export default function GridOverlay({ map, pixelCache, pixelCount, onPixelClick }: GridOverlayProps) {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
-
-    // used to place single pixels
-    // TODO maybe remove because right now its not that big of a performance improvement (grid gets rendered new at every move anyways)
-    const updatePixel = (pixel: Pixel) => {
-        const canvas = canvasRef.current!;
-        const ctx = canvas.getContext("2d")!;
-
-        const topLeft = new mapboxgl.MercatorCoordinate(
-            pixel.x * TILE_SIZE,
-            pixel.y * TILE_SIZE,
-            0
-        ).toLngLat();
-        const bottomRight = new mapboxgl.MercatorCoordinate(
-            (pixel.x + 1) * TILE_SIZE,
-            (pixel.y + 1) * TILE_SIZE,
-            0
-        ).toLngLat();
-
-        const p1 = map.project(topLeft);
-        const p2 = map.project(bottomRight);
-
-        ctx.fillStyle = pixel.color;
-        ctx.fillRect(p1.x, p1.y, p2.x - p1.x, p2.y - p1.y);
-    };
 
     const resize = () => {
         const canvas = canvasRef.current!;
@@ -74,15 +50,15 @@ export default function GridOverlay({ map, pixelCache, pixelCount, onPixelClick 
         const ne = mapboxgl.MercatorCoordinate.fromLngLat(bounds.getNorthEast());
 
         // grid lines based on visible area
-        const startX = Math.floor(sw.x / TILE_SIZE) * TILE_SIZE;
-        const startY = Math.floor(ne.y / TILE_SIZE) * TILE_SIZE;
+        const startX = Math.floor(sw.x / GRID_TILE_SIZE) * GRID_TILE_SIZE;
+        const startY = Math.floor(ne.y / GRID_TILE_SIZE) * GRID_TILE_SIZE;
 
         // create canvas
         ctx.strokeStyle = "rgba(0,0,0,0.2)";
         ctx.lineWidth = 1;
 
         // create vertical lines (x equals lng)
-        for (let x = startX; x <= ne.x; x += TILE_SIZE) {
+        for (let x = startX; x <= ne.x; x += GRID_TILE_SIZE) {
             const top = new mapboxgl.MercatorCoordinate(x, ne.y, 0).toLngLat();
             const bot = new mapboxgl.MercatorCoordinate(x, sw.y, 0).toLngLat();
             const p1 = map.project(top);
@@ -91,7 +67,7 @@ export default function GridOverlay({ map, pixelCache, pixelCount, onPixelClick 
         }
 
         // create horizontal lines (y equals lat)
-        for (let y = startY; y <= sw.y; y += TILE_SIZE) {
+        for (let y = startY; y <= sw.y; y += GRID_TILE_SIZE) {
             const left = new mapboxgl.MercatorCoordinate(sw.x, y, 0).toLngLat();
             const right = new mapboxgl.MercatorCoordinate(ne.x, y, 0).toLngLat();
             const p1 = map.project(left);
@@ -103,20 +79,20 @@ export default function GridOverlay({ map, pixelCache, pixelCount, onPixelClick 
         for (let pixel of pixelCache.current) {
             // check if pixel is currently visible, else skip
             if (
-                pixel.x * TILE_SIZE < sw.x ||
-                pixel.x * TILE_SIZE > ne.x ||
-                pixel.y * TILE_SIZE < ne.y ||
-                pixel.y * TILE_SIZE > sw.y
+                pixel.x * GRID_TILE_SIZE < sw.x ||
+                pixel.x * GRID_TILE_SIZE > ne.x ||
+                pixel.y * GRID_TILE_SIZE < ne.y ||
+                pixel.y * GRID_TILE_SIZE > sw.y
             ) continue;
 
             const topLeft = new mapboxgl.MercatorCoordinate(
-                pixel.x * TILE_SIZE,
-                pixel.y * TILE_SIZE,
+                pixel.x * GRID_TILE_SIZE,
+                pixel.y * GRID_TILE_SIZE,
                 0
             ).toLngLat();
             const bottomRight = new mapboxgl.MercatorCoordinate(
-                (pixel.x + 1) * TILE_SIZE,
-                (pixel.y + 1) * TILE_SIZE,
+                (pixel.x + 1) * GRID_TILE_SIZE,
+                (pixel.y + 1) * GRID_TILE_SIZE,
                 0
             ).toLngLat();
 
@@ -125,6 +101,8 @@ export default function GridOverlay({ map, pixelCache, pixelCount, onPixelClick 
 
             ctx.fillStyle = pixel.color;
             ctx.fillRect(p1.x, p1.y, p2.x - p1.x, p2.y - p1.y);
+
+            console.log("Updated grid");
         }
     };
 
@@ -133,8 +111,8 @@ export default function GridOverlay({ map, pixelCache, pixelCount, onPixelClick 
             const lngLat = e.lngLat;
             const merc = mapboxgl.MercatorCoordinate.fromLngLat(lngLat);
 
-            const gridX = Math.floor(merc.x / TILE_SIZE);
-            const gridY = Math.floor(merc.y / TILE_SIZE);
+            const gridX = Math.floor(merc.x / GRID_TILE_SIZE);
+            const gridY = Math.floor(merc.y / GRID_TILE_SIZE);
 
             console.log(`Grid click registered: Coordinates [${lngLat.lng}|${lngLat.lat}] | Canvas Pixel [${gridX}|${gridY}]`);
 
