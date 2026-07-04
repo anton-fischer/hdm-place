@@ -18,13 +18,12 @@ const PRESETS = [
 ];
 
 type ColorPickerProps = {
-    isLocked: boolean;
     timeLeft: number;
     selectedColor: string;
     setSelectedColor: (color: string) => void;
 };
 
-export default function ColorPicker({ isLocked, timeLeft, selectedColor, setSelectedColor }: ColorPickerProps) {
+export default function ColorPicker({ timeLeft, selectedColor, setSelectedColor }: ColorPickerProps) {
     const [inputValue, setInputValue] = useState("");
     const [isCustomColorSelected, setIsCustomColorSelected] = useState(false);
 
@@ -60,7 +59,7 @@ export default function ColorPicker({ isLocked, timeLeft, selectedColor, setSele
 
     return (
         <div className={styles.container}>
-            {isLocked ? (
+            {timeLeft > 0 ? (
                 <div className={styles.lockContainer}>
                     <FontAwesomeIcon icon={faLock} className={styles.lockIcon} />
                     <div className={styles.timer}>{formatTime(timeLeft)}</div>

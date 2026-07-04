@@ -34,19 +34,18 @@ type Pixel = {
 
 export default function MapContainer() {
     const [map, setMap] = useState<mapboxgl.Map | null>(null);
+    const [isConnected, setIsConnected] = useState(false);
     const [pixelCount, setPixelCount] = useState(0);
-    const [selectedColor, setSelectedColor] = useState("");
 
-    const [isLocked, setIsLocked] = useState(false);
-    const [timeLeft, setTimeLeft] = useState(COUNTDOWN_TIME);
+    const [selectedColor, setSelectedColor] = useState("");
+    const [timeLeft, setTimeLeft] = useState(0);
 
     const [showMessage, setShowMessage] = useState(true);
-    const [messageIcon, setMessageIcon] = useState<IconDefinition | null>(null);
+    const [messageIcon, setMessageIcon] = useState<IconDefinition>();
     const [messageText, setMessageText] = useState("");
-    const [retryTimeLeft, setRetryTimeLeft] = useState(-1);
+    const [messageTimer, setMessageTimer] = useState(-1);
 
-    const reconnectDelayRef = useRef(1000); // start with 1s, increase with each try
-    const selectedColorRef = useRef(selectedColor);
+    const reconnectDelayRef = useRef(1000); // start with 1s, increase with each try up to 30s
 
     const pixelCacheRef = useRef<Pixel[]>([]);
     const pixelMapRef = useRef<Map<string, Pixel>>(new Map());
@@ -56,14 +55,13 @@ export default function MapContainer() {
     const loadTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     useEffect(() => {
-        if (!isLocked) return;
+        if (timeLeft <= 0) return;
 
         const interval = setInterval(() => {
             // reduce time until timer hits 0, then unlock
             setTimeLeft((prev) => {
                 if (prev <= 1) {
                     clearInterval(interval);
-                    setIsLocked(false);
                     return 0;
                 }
                 return prev - 1;
@@ -71,7 +69,7 @@ export default function MapContainer() {
         }, 1000);
 
         return () => clearInterval(interval);
-    }, [isLocked]);
+    }, [timeLeft]);
 
     const addPixelToCache = (pixel: Pixel) => {
         const key = `${pixel.x}:${pixel.y}`;
@@ -122,6 +120,11 @@ export default function MapContainer() {
     };
 
     const fetchVisibleChunks = async (currentMap: mapboxgl.Map) => {
+        if (!isConnected) {
+            console.warn("Currently no connection with websocket, not fetching chunks");
+            return;
+        }
+
         const chunks = getVisibleChunks(currentMap);
         const missingChunks = chunks.filter(({ x, y }) => {
             const key = `${x}:${y}`;
@@ -155,6 +158,19 @@ export default function MapContainer() {
         }));
     };
 
+    const getOrCreateUserId = () => {
+        // get userId from local storage (should be generated on websocket connect)
+        let userId = localStorage.getItem("userId");
+
+        if (!userId) {
+            console.warn("UserId not found in local storage, regenerating");
+            userId = crypto.randomUUID();
+            localStorage.setItem("userId", userId);
+        }
+
+        return userId;
+    };
+
     const showPixelInfo = async (x: number, y: number, lang: number, lat: number) => {
         try {
             const pixel = await fetchPixel(x, y, true);
@@ -165,13 +181,17 @@ export default function MapContainer() {
                     .addTo(map);
             }
         } catch (err: any) {
-            // nothing to do
+            console.warn(`Could not fetch pixel info for pixel [${x}|${y}]`, err);
             return;
         }
     }
 
     const handlePixelClick = async (x: number, y: number, lang: number, lat: number) => {
-        if (isLocked) {
+        if (!isConnected) {
+            console.warn("Currently no connection with websocket, not placing pixel");
+            return;
+        }
+        if (timeLeft > 0) {
             console.warn("Grid is currently locked, not placing pixel");
             showPixelInfo(x, y, lang, lat);
             return;
@@ -182,55 +202,40 @@ export default function MapContainer() {
             return;
         }
 
-        // get userId from local storage (should be generated on websocket connect)
-        let userId = localStorage.getItem("userId");
-
-        if (!userId) {
-            console.warn("UserId not found in local storage, regenerating");
-            userId = crypto.randomUUID();
-            localStorage.setItem("userId", userId);
-        }
-
         try {
-            const pixel = await placePixel(x, y, selectedColor, userId);
+            const pixel = await placePixel(x, y, selectedColor, getOrCreateUserId());
             console.log("Pixel placed:", pixel);
-            setIsLocked(true);
             setTimeLeft(COUNTDOWN_TIME);
         } catch (err: any) {
-            if (err.payload.retryAfter) {
-                setIsLocked(true);
+            if (err?.payload?.retryAfter) {
                 setTimeLeft(err.payload.retryAfter);
             }
         }
     };
 
-    const loadData = async () => {
-        reconnectDelayRef.current = 1000; // reset delay on success
+    const fetchPlayerCooldown = async () => {
+        try {
+            const userId = getOrCreateUserId();
+            const cooldown = await fetchCooldown(userId);
+            console.log(`Cooldown fetched for player [${userId}]:`, cooldown);
 
-        // load user info
-        // get userId from local storage or generate one
-        let userId = localStorage.getItem("userId");
-
-        if (!userId) {
-            console.warn("UserId not found in local storage, regenerating");
-            userId = crypto.randomUUID();
-            localStorage.setItem("userId", userId);
-        } else {
-            try {
-                const cooldown = await fetchCooldown(userId);
-                console.log("Cooldown fetched:", cooldown);
-
-                if (cooldown.isOnCooldown) {
-                    setIsLocked(true);
-                    setTimeLeft(cooldown.remainingSeconds);
-                }
-            } catch (err: any) {
-                // nothing to do
-                return;
+            if (cooldown.isOnCooldown) {
+                setTimeLeft(cooldown.remainingSeconds);
             }
+        } catch (err: any) {
+            // nothing to do
+            return;
         }
 
+        reconnectDelayRef.current = 1000; // reset delay on success
         setShowMessage(false);
+    };
+
+    const setInfoBoxContent = (icon: IconDefinition, text: string, timer = -1) => {
+        setMessageIcon(icon);
+        setMessageText(text);
+        setMessageTimer(timer);
+        setShowMessage(true);
     };
 
     useEffect(() => {
@@ -259,22 +264,16 @@ export default function MapContainer() {
             map.off("moveend", scheduleViewportLoad);
             map.off("zoomend", scheduleViewportLoad);
         };
-    }, [map]);
+    }, [map, isConnected]);
 
     useEffect(() => {
-        // workaround needed to always have the updated values here
-        selectedColorRef.current = selectedColor;
-    }, [selectedColor]);
-
-    useEffect(() => {
-        if (retryTimeLeft <= 0) return;
+        if (messageTimer <= 0) return;
 
         const interval = setInterval(() => {
             // reduce time until timer hits 0, then unlock
-            setRetryTimeLeft((prev) => {
+            setMessageTimer((prev) => {
                 if (prev <= 1) {
-                    setMessageText("Establishing connection...");
-                    setMessageIcon(faSpinner);
+                    setInfoBoxContent(faSpinner, "Establishing connection...");
                     clearInterval(interval);
                     return 0;
                 }
@@ -283,11 +282,10 @@ export default function MapContainer() {
         }, 1000);
 
         return () => clearInterval(interval);
-    }, [retryTimeLeft]);
+    }, [messageTimer]);
 
     useEffect(() => {
-        setMessageText("Establishing connection...");
-        setMessageIcon(faSpinner);
+        setInfoBoxContent(faSpinner, "Establishing connection...");
 
         let socket: WebSocket;
         let reconnectTimeout: NodeJS.Timeout;
@@ -298,9 +296,10 @@ export default function MapContainer() {
             socket.onopen = () => {
                 console.log("WebSocket connected!");
                 if (ENABLE_LOGGING) notifySuccess("Established connection!");
+                setIsConnected(true);
 
-                // fetch pixels from database
-                loadData();
+                // check if player is currently on cooldown
+                fetchPlayerCooldown();
             }
 
             socket.onmessage = (event) => {
@@ -335,12 +334,10 @@ export default function MapContainer() {
                 });
 
                 if (ENABLE_LOGGING) notifyError("Failed to connect!");
+                setIsConnected(false);
 
-                setMessageIcon(faTriangleExclamation);
-                reconnectDelayRef.current = Math.min(reconnectDelayRef.current * 2, 30000); // max 30s
-                setRetryTimeLeft(reconnectDelayRef.current / 1000);
-                setMessageText(`Could not connect to server, retrying in:`);
-                setShowMessage(true);
+                reconnectDelayRef.current = Math.min(reconnectDelayRef.current * 2, 30000); // double time after each try, max 30s
+                setInfoBoxContent(faTriangleExclamation, "Could not connect to server, retrying in:", reconnectDelayRef.current / 1000);
 
                 reconnectTimeout = setTimeout(() => {
                     connect();
@@ -362,6 +359,18 @@ export default function MapContainer() {
 
     return (
         <div>
+            <img
+                src="/resources/hdm-place-logo.png"
+                alt="Logo"
+                style={{
+                    position: "absolute",
+                    top: 25,
+                    left: 25,
+                    zIndex: 100,
+                    width: "175px",
+                    height: "auto"
+                }}
+            />
             <Toaster toastOptions={{
                 position: "bottom-left", style: {
                     background: "rgba(20, 20, 20, 0.9)",
@@ -371,7 +380,7 @@ export default function MapContainer() {
                     borderRadius: "12px",
                 }
             }} />
-            {showMessage ? <MessageBox icon={messageIcon} text={messageText} time={retryTimeLeft} /> : <ColorPicker isLocked={isLocked} timeLeft={timeLeft} selectedColor={selectedColor} setSelectedColor={setSelectedColor} />}
+            {showMessage ? <MessageBox icon={messageIcon} text={messageText} time={messageTimer} /> : <ColorPicker timeLeft={timeLeft} selectedColor={selectedColor} setSelectedColor={setSelectedColor} />}
             <MapboxMap onMapReady={setMap} />
             {map && <GridOverlay map={map} pixelCache={pixelCacheRef} pixelCount={pixelCount} onPixelClick={handlePixelClick} />}
         </div>
