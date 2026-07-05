@@ -101,9 +101,9 @@ export default function GridOverlay({ map, pixelCache, pixelCount, onPixelClick 
 
             ctx.fillStyle = pixel.color;
             ctx.fillRect(p1.x, p1.y, p2.x - p1.x, p2.y - p1.y);
-
-            console.log("Updated grid");
         }
+
+        console.log("Updated grid");
     };
 
     useEffect(() => {

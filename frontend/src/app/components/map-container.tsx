@@ -2,7 +2,7 @@
 
 import { ENABLE_LOGGING, API_URL, COUNTDOWN_TIME } from "../config"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { faTriangleExclamation, faSpinner, IconDefinition } from "@fortawesome/free-solid-svg-icons";
 import { Toaster } from "react-hot-toast";
 
@@ -171,7 +171,7 @@ export default function MapContainer() {
         return userId;
     };
 
-    const showPixelInfo = async (x: number, y: number, lang: number, lat: number) => {
+    const showPixelInfo = useCallback(async (x: number, y: number, lang: number, lat: number) => {
         try {
             const pixel = await fetchPixel(x, y, true);
             if (map) {
@@ -184,9 +184,9 @@ export default function MapContainer() {
             console.warn(`Could not fetch pixel info for pixel [${x}|${y}]`, err);
             return;
         }
-    }
+    }, [map]);
 
-    const handlePixelClick = async (x: number, y: number, lang: number, lat: number) => {
+    const handlePixelClick = useCallback(async (x: number, y: number, lang: number, lat: number) => {
         if (!isConnected) {
             console.warn("Currently no connection with websocket, not placing pixel");
             return;
@@ -211,7 +211,7 @@ export default function MapContainer() {
                 setTimeLeft(err.payload.retryAfter);
             }
         }
-    };
+    }, [isConnected, timeLeft, selectedColor]);
 
     const fetchPlayerCooldown = async () => {
         try {
