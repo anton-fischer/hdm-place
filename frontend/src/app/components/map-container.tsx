@@ -1,6 +1,6 @@
 'use client';
 
-import { ENABLE_LOGGING, API_URL, COUNTDOWN_TIME } from "../config"
+import { API_URL, COUNTDOWN_TIME } from "../config"
 
 import { useState, useEffect, useRef, useCallback } from "react"
 import { faTriangleExclamation, faSpinner, IconDefinition } from "@fortawesome/free-solid-svg-icons";
@@ -17,6 +17,8 @@ import ColorPicker from "./color-picker";
 import GridOverlay from "./grid-overlay";
 import MapboxMap from "./mapbox-map";
 import MessageBox from "./message-box";
+
+import Logger from "../utils/logger";
 
 const GRID_TILE_SIZE = 0.000001; // size of a pixel in the grid
 
@@ -121,7 +123,7 @@ export default function MapContainer() {
 
     const fetchVisibleChunks = async (currentMap: mapboxgl.Map) => {
         if (!isConnected) {
-            console.warn("Currently no connection with websocket, not fetching chunks");
+            Logger.warn("Currently no connection with websocket, not fetching chunks");
             return;
         }
 
@@ -148,10 +150,10 @@ export default function MapContainer() {
 
                 addPixelsToCache(pixels);
                 loadedChunksRef.current.add(key);
-                //console.log(`Chunk ${key} fetched with pixels: ${pixels}`);
-                console.log(`Chunk ${key} fetched with containing ${pixels.length} pixels`);
+                //Logger.log(`Chunk ${key} fetched with pixels: ${pixels}`);
+                Logger.log(`Chunk ${key} fetched with containing ${pixels.length} pixels`);
             } catch (err) {
-                console.warn(`Could not fetch pixel chunk ${key}`, err);
+                Logger.warn(`Could not fetch pixel chunk ${key}`, err);
             } finally {
                 pendingChunksRef.current.delete(key);
             }
@@ -163,7 +165,7 @@ export default function MapContainer() {
         let userId = localStorage.getItem("userId");
 
         if (!userId) {
-            console.warn("UserId not found in local storage, regenerating");
+            Logger.warn("UserId not found in local storage, regenerating");
             userId = crypto.randomUUID();
             localStorage.setItem("userId", userId);
         }
@@ -181,30 +183,30 @@ export default function MapContainer() {
                     .addTo(map);
             }
         } catch (err: any) {
-            console.warn(`Could not fetch pixel info for pixel [${x}|${y}]`, err);
+            Logger.warn(`Could not fetch pixel info for pixel [${x}|${y}]`, err);
             return;
         }
     }, [map]);
 
     const handlePixelClick = useCallback(async (x: number, y: number, lang: number, lat: number) => {
         if (!isConnected) {
-            console.warn("Currently no connection with websocket, not placing pixel");
+            Logger.warn("Currently no connection with websocket, not placing pixel");
             return;
         }
         if (timeLeft > 0) {
-            console.warn("Grid is currently locked, not placing pixel");
+            Logger.warn("Grid is currently locked, not placing pixel");
             showPixelInfo(x, y, lang, lat);
             return;
         }
         if (!selectedColor) {
-            console.warn("No color selected, not placing pixel");
+            Logger.warn("No color selected, not placing pixel");
             showPixelInfo(x, y, lang, lat);
             return;
         }
 
         try {
             const pixel = await placePixel(x, y, selectedColor, getOrCreateUserId());
-            console.log("Pixel placed:", pixel);
+            Logger.log("Pixel placed:", pixel);
             setTimeLeft(COUNTDOWN_TIME);
         } catch (err: any) {
             if (err?.payload?.retryAfter) {
@@ -217,7 +219,7 @@ export default function MapContainer() {
         try {
             const userId = getOrCreateUserId();
             const cooldown = await fetchCooldown(userId);
-            console.log(`Cooldown fetched for player [${userId}]:`, cooldown);
+            Logger.log(`Cooldown fetched for player [${userId}]:`, cooldown);
 
             if (cooldown.isOnCooldown) {
                 setTimeLeft(cooldown.remainingSeconds);
@@ -294,8 +296,8 @@ export default function MapContainer() {
             socket = new WebSocket(API_URL + "/ws");
 
             socket.onopen = () => {
-                console.log("WebSocket connected!");
-                if (ENABLE_LOGGING) notifySuccess("Established connection!");
+                Logger.log("WebSocket connected!");
+                notifySuccess("Established connection!");
                 setIsConnected(true);
 
                 // check if player is currently on cooldown
@@ -304,7 +306,7 @@ export default function MapContainer() {
 
             socket.onmessage = (event) => {
                 const data = JSON.parse(event.data);
-                console.log("WS event:", data);
+                Logger.log("WS event:", data);
 
                 switch (data.type) {
                     case "connected": {
@@ -316,24 +318,24 @@ export default function MapContainer() {
                         break;
                     }
                     default: {
-                        console.warn("Unknown ws message type recieved: ", data.type);
+                        Logger.warn("Unknown ws message type recieved: ", data.type);
                     }
                 }
             }
 
             /*socket.onerror = (err) => {
-                console.error("WebSocket error:", err);
-                if (ENABLE_LOGGING) notifyError("WebSocket error!");
+                Logger.error("WebSocket error:", err);
+                notifyError("WebSocket error!");
             }*/
 
             socket.onclose = (event) => {
-                console.warn("WebSocket disconnected:", {
+                Logger.warn("WebSocket disconnected:", {
                     code: event.code,
                     reason: event.reason,
                     wasClean: event.wasClean
                 });
 
-                if (ENABLE_LOGGING) notifyError("Failed to connect!");
+                notifyError("Failed to connect!");
                 setIsConnected(false);
 
                 reconnectDelayRef.current = Math.min(reconnectDelayRef.current * 2, 30000); // double time after each try, max 30s
@@ -354,7 +356,7 @@ export default function MapContainer() {
     }, []);
 
     /*useEffect(() => {
-        console.log("PIXEL COUNT UPDATE PARENT")
+        Logger.log("PIXEL COUNT UPDATE PARENT")
     }, [pixelCount]);*/
 
     return (

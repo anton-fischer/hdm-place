@@ -4,10 +4,10 @@
 
 import toast from "react-hot-toast";
 
-const ENABLE_LOGGING = true;
+import { ENABLE_NOTIFICATIONS } from "../config";
 
 export const notifyPromise = (promise: Promise<any>, success = "Success!", loading = "Loading...") => {
-    if (!ENABLE_LOGGING) return;
+    if (!ENABLE_NOTIFICATIONS) return;
     
     toast.promise(promise, {
         loading,
@@ -17,13 +17,13 @@ export const notifyPromise = (promise: Promise<any>, success = "Success!", loadi
 }
 
 export const notifySuccess = (text: string) => {
-    if (!ENABLE_LOGGING) return;
+    if (!ENABLE_NOTIFICATIONS) return;
     
     toast.success(text);
 }
 
 export const notifyError = (text: string) => {
-    if (!ENABLE_LOGGING) return;
+    if (!ENABLE_NOTIFICATIONS) return;
     
     toast.error(text);
 }

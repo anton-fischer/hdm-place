@@ -3,6 +3,8 @@
 import { RefObject, useEffect, useRef } from "react";
 import mapboxgl from "mapbox-gl";
 
+import Logger from "../utils/logger";
+
 import styles from "../styles/grid-overlay.module.css"
 
 const GRID_TILE_SIZE = 0.000001; // size of a pixel in the grid
@@ -103,7 +105,7 @@ export default function GridOverlay({ map, pixelCache, pixelCount, onPixelClick 
             ctx.fillRect(p1.x, p1.y, p2.x - p1.x, p2.y - p1.y);
         }
 
-        console.log("Updated grid");
+        Logger.log("Updated grid");
     };
 
     useEffect(() => {
@@ -114,7 +116,7 @@ export default function GridOverlay({ map, pixelCache, pixelCount, onPixelClick 
             const gridX = Math.floor(merc.x / GRID_TILE_SIZE);
             const gridY = Math.floor(merc.y / GRID_TILE_SIZE);
 
-            console.log(`Grid click registered: Coordinates [${lngLat.lng}|${lngLat.lat}] | Canvas Pixel [${gridX}|${gridY}]`);
+            Logger.log(`Grid click registered: Coordinates [${lngLat.lng}|${lngLat.lat}] | Canvas Pixel [${gridX}|${gridY}]`);
 
             onPixelClick(gridX, gridY, lngLat.lng, lngLat.lat);
         }
@@ -135,7 +137,7 @@ export default function GridOverlay({ map, pixelCache, pixelCount, onPixelClick 
     }, [map, onPixelClick]);
 
     useEffect(() => {
-        //console.log("PIXEL COUNT UPDATE CHILD")
+        //Logger.log("PIXEL COUNT UPDATE CHILD")
         updateGrid();
     }, [pixelCount]);
 
