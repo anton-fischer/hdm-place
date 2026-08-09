@@ -27,6 +27,7 @@ export default function ColorPicker({ timeLeft, selectedColor, setSelectedColor 
     const [inputValue, setInputValue] = useState("");
     const [isCustomColorSelected, setIsCustomColorSelected] = useState(false);
 
+    // executes on color click
     const toggleColor = (color: string) => {       
         if (selectedColor === color) {
             setSelectedColor("");
@@ -37,6 +38,7 @@ export default function ColorPicker({ timeLeft, selectedColor, setSelectedColor 
         }
     };
 
+    // executes on color code input
     const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
         setInputValue(value);
@@ -49,6 +51,7 @@ export default function ColorPicker({ timeLeft, selectedColor, setSelectedColor 
         }
     };
 
+    // utility to format time
     const formatTime = (seconds: number) => {
         const h = String(Math.floor(seconds / 3600)).padStart(2, "0");
         const m = String(Math.floor((seconds % 3600) / 60)).padStart(2, "0");
