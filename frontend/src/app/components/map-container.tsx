@@ -3,11 +3,11 @@
 import { API_URL, COUNTDOWN_TIME } from "../config"
 
 import { useState, useEffect, useRef, useCallback } from "react"
-import { faTriangleExclamation, faSpinner, IconDefinition } from "@fortawesome/free-solid-svg-icons";
+import { faTriangleExclamation, faSpinner, IconDefinition, faSun, faMoon } from "@fortawesome/free-solid-svg-icons";
 import { Toaster } from "react-hot-toast";
 
 import { notifyError, notifySuccess } from "../utils/toast"
-import { placePixel, fetchPixelArea, fetchCooldown, fetchPixel } from "../utils/api";
+import { placePixel, fetchPixelArea, fetchCooldown } from "../utils/api";
 
 import styles from "../styles/map-container.module.css"
 
@@ -19,6 +19,7 @@ import MapboxMap from "./mapbox-map";
 import MessageBox from "./message-box";
 
 import Logger from "../utils/logger";
+import Button from "./button";
 
 const GRID_TILE_SIZE = 0.000001; // size of a pixel in the grid
 
@@ -34,8 +35,12 @@ type Pixel = {
     placedAt: number
 };
 
+// main component holding all other components
+// also contains the logic for chunk loading, handling cooldown, doing backend requests, and more
 export default function MapContainer() {
     const [map, setMap] = useState<mapboxgl.Map | null>(null);
+    const [isDarkmodeEnabled, setIsDarkmodeEnabled] = useState(false);
+
     const [isConnected, setIsConnected] = useState(false);
     const [pixelCount, setPixelCount] = useState(0);
 
@@ -73,6 +78,7 @@ export default function MapContainer() {
         return () => clearInterval(interval);
     }, [timeLeft]);
 
+    // adds a single pixel to the cache map
     const addPixelToCache = (pixel: Pixel) => {
         const key = `${pixel.x}:${pixel.y}`;
 
@@ -89,10 +95,12 @@ export default function MapContainer() {
         loadedChunksRef.current.add(chunkKey);
     };
 
+    // adds multiple pixels to the cache map
     const addPixelsToCache = (pixels: Pixel[]) => {
         pixels.forEach(addPixelToCache);
     };
 
+    // returns all chunks that are currently visible
     const getVisibleChunks = (currentMap: mapboxgl.Map) => {
         const bounds = currentMap.getBounds();
         if (!bounds) return [];
@@ -121,6 +129,7 @@ export default function MapContainer() {
         return chunks;
     };
 
+    // fetches pixels for the chunks that are currently visible
     const fetchVisibleChunks = async (currentMap: mapboxgl.Map) => {
         if (!isConnected) {
             Logger.warn("Currently no connection with websocket, not fetching chunks");
@@ -160,6 +169,8 @@ export default function MapContainer() {
         }));
     };
 
+    // returns existing userId or creates a new one
+    // TODO: make this more robust by replacing local ids e.g. with user accounts?
     const getOrCreateUserId = () => {
         // get userId from local storage (should be generated on websocket connect)
         let userId = localStorage.getItem("userId");
@@ -173,21 +184,22 @@ export default function MapContainer() {
         return userId;
     };
 
-    const showPixelInfo = useCallback(async (x: number, y: number, lang: number, lat: number) => {
-        try {
-            const pixel = await fetchPixel(x, y, true);
-            if (map) {
-                new mapboxgl.Popup({ closeOnClick: true, className: styles["popup-pixel-info"] })
-                    .setLngLat([lang, lat])
-                    .setHTML(`<p>Coordinates: [${pixel.x}|${pixel.y}]</p><p>Color: ${pixel.color}</p><p>Placed at: ${new Date(pixel.placedAt).toLocaleString()}</p>`)
-                    .addTo(map);
-            }
-        } catch (err: any) {
-            Logger.warn(`Could not fetch pixel info for pixel [${x}|${y}]`, err);
-            return;
-        }
-    }, [map]);
+    // creates a mapbox popup with pixel info for a pixel at the given coordinates
+    const showPixelInfo = (async (x: number, y: number, lang: number, lat: number) => {
+        // check cache if there is a pixel at the given coordinates
+        const pixel = pixelMapRef.current.get(`${x}:${y}`);
+        if (!pixel) return;
 
+        // create mapbox popup to show the pixel info
+        if (map) {
+            new mapboxgl.Popup({ closeOnClick: true, className: styles["popup-pixel-info"] })
+                .setLngLat([lang, lat])
+                .setHTML(`<p>Coordinates: [${pixel.x}|${pixel.y}]</p><p>Color: ${pixel.color}</p><p>Placed at: ${new Date(pixel.placedAt).toLocaleString()}</p>`)
+                .addTo(map);
+        }
+    });
+
+    // executed on map click
     const handlePixelClick = useCallback(async (x: number, y: number, lang: number, lat: number) => {
         if (!isConnected) {
             Logger.warn("Currently no connection with websocket, not placing pixel");
@@ -213,11 +225,11 @@ export default function MapContainer() {
                 setTimeLeft(err.payload.retryAfter);
             }
         }
-    }, [isConnected, timeLeft, selectedColor]);
+    }, [isConnected, timeLeft, selectedColor, map]);
 
-    const fetchPlayerCooldown = async () => {
+    // fetches current cooldown for a user with the given userId
+    const fetchPlayerCooldown = async (userId: string) => {
         try {
-            const userId = getOrCreateUserId();
             const cooldown = await fetchCooldown(userId);
             Logger.log(`Cooldown fetched for player [${userId}]:`, cooldown);
 
@@ -233,6 +245,7 @@ export default function MapContainer() {
         setShowMessage(false);
     };
 
+    // updates content of the info box and shows it
     const setInfoBoxContent = (icon: IconDefinition, text: string, timer = -1) => {
         setMessageIcon(icon);
         setMessageText(text);
@@ -301,7 +314,8 @@ export default function MapContainer() {
                 setIsConnected(true);
 
                 // check if player is currently on cooldown
-                fetchPlayerCooldown();
+                const userId = getOrCreateUserId();
+                fetchPlayerCooldown(userId);
             }
 
             socket.onmessage = (event) => {
@@ -373,13 +387,29 @@ export default function MapContainer() {
                     height: "auto"
                 }}
             />
+            <Button
+                onClick={() => {
+                    if (!map) return;
+                    isDarkmodeEnabled ? map.setStyle("mapbox://styles/mapbox/streets-v11") : map.setStyle("mapbox://styles/mapbox/dark-v11");
+                    setIsDarkmodeEnabled(!isDarkmodeEnabled);
+                }}
+                icon={isDarkmodeEnabled ? faSun : faMoon}
+                style={{
+                    position: "absolute",
+                    top: 25,
+                    right: 25,
+                    zIndex: 100,
+                }}
+            />
             <Toaster toastOptions={{
                 position: "bottom-left", style: {
                     background: "rgba(20, 20, 20, 0.9)",
                     boxShadow: "0 0 20px 0 rgba(0, 0, 0, 0.6)",
                     color: "#fff",
+                    fontSize: "13px",
                     backdropFilter: "blur(6px)",
                     borderRadius: "12px",
+                    cursor: "default",
                 }
             }} />
             {showMessage ? <MessageBox icon={messageIcon} text={messageText} time={messageTimer} /> : <ColorPicker timeLeft={timeLeft} selectedColor={selectedColor} setSelectedColor={setSelectedColor} />}
