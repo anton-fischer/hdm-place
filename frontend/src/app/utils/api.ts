@@ -3,9 +3,9 @@
 */
 
 import { API_URL } from "../config"
-
 import { notifyPromise } from "./toast"
 
+// sends POST request to backend to place a single pixel
 export async function placePixel(x: number, y: number, color: string, userId: string, quiet: boolean = false) {
     const promise = fetch(`${API_URL}/api/pixel`, {
         method: "POST",
@@ -28,6 +28,7 @@ export async function placePixel(x: number, y: number, color: string, userId: st
     }
 }
 
+// sends GET request to backend to fetch a single pixel
 export async function fetchPixel(x: number, y: number, quiet: boolean = false) {
     const promise = fetch(`${API_URL}/api/pixel/${x}/${y}`).then(async res => {
         const payload = await res.json();
@@ -46,6 +47,7 @@ export async function fetchPixel(x: number, y: number, quiet: boolean = false) {
     }
 }
 
+// sends GET request to backend to fetch multiple pixels
 export async function fetchPixelArea(x1: number, y1: number, x2: number, y2: number, quiet: boolean = false) {
     const promise = fetch(`${API_URL}/api/pixels/${x1}/${y1}/${x2}/${y2}`).then(async res => {
         const payload = await res.json();
@@ -64,6 +66,7 @@ export async function fetchPixelArea(x1: number, y1: number, x2: number, y2: num
     }
 }
 
+// sends GET request to backend to fetch the current cooldown of the user
 export async function fetchCooldown(id: string, quiet: boolean = false) {
     const promise = fetch(`${API_URL}/api/users/${id}/cooldown`).then(async res => {
         const payload = await res.json();

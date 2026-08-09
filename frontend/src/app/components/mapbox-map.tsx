@@ -42,7 +42,7 @@ export default function MapboxMap({ onMapReady }: MapboxMapProps) {
         /*mapRef.current.on("click", (e) => {
             const lng = e.lngLat.lng;
             const lat = e.lngLat.lat;
-            console.log("Click registered on coords:", lng, lat);
+            Logger.log("Click registered on coords:", lng, lat);
         });*/
 
         mapRef.current.on("load", () => {
