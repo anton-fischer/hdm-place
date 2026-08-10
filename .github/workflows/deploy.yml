@@ -7,6 +7,7 @@ on:
       - "backend/**"
       - "frontend/**"
   workflow_dispatch:
+  push:
 
 env:
   AWS_REGION: eu-north-1
