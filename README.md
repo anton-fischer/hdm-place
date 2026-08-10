@@ -66,7 +66,7 @@ Pushing to `main` triggers the [pipeline](.github/workflows/deploy.yml) located 
 
 This will then build and push the backend image to ECR, forces a new ECS deployment, and builds / syncs the frontend to S3 with a CloudFront invalidation.
 
-Note: Make sure all env variables are set as GitHub Secrets. The values for `CLOUDFRONT_DISTRIBUTION_ID` and `NEXT_PUBLIC_BACKEND_API_URL` must be updated, whenever `terraform apply` is run (use the new values for cloudfront_distribution_id and cloudfront_url in output vars).
+Note: Make sure all env variables are set as GitHub Secrets. The values for `CLOUDFRONT_DISTRIBUTION_ID` and `NEXT_PUBLIC_BACKEND_API_URL` must be updated, whenever `terraform apply` is run (use the new values for cloudfront_distribution_id and https:// + cloudfront_url in output vars).
 
 ### Manual
 

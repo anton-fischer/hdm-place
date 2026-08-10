@@ -1,8 +1,12 @@
 name: Deploy
 
 on:
-  workflow_dispatch:
   push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - "frontend/**"
+  workflow_dispatch:
 
 env:
   AWS_REGION: eu-north-1
