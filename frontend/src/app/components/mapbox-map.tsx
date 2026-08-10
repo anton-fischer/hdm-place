@@ -51,6 +51,8 @@ export default function MapboxMap({ onMapReady }: MapboxMapProps) {
 
         //mapRef.current.addControl(new mapboxgl.NavigationControl());
         mapRef.current.scrollZoom.setWheelZoomRate(1.5);
+        // touch rotation is separate from dragRotate and would still distort the pixel grid
+        mapRef.current.touchZoomRotate.disableRotation();
 
         return () => {
             mapRef.current?.remove();

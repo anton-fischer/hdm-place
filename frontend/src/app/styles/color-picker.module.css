@@ -6,6 +6,7 @@
     backdrop-filter: blur(6px);
     border-radius: 12px;
     width: 484px;
+    max-width: calc(100vw - 20px);
     height: 60px;
     box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.6);
 
@@ -19,6 +20,15 @@
 .colorList {
     display: flex;
     gap: 8px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    align-items: center;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+
+.colorList::-webkit-scrollbar {
+    display: none;
 }
 
 .colorButton {
@@ -28,6 +38,7 @@
     border: 2px solid transparent;
     cursor: pointer;
     transition: transform 0.1s, border 0.2s;
+    flex-shrink: 0;
 }
 
 .colorButton:hover {
@@ -43,6 +54,7 @@
     padding: 8px;
     border-radius: 6px;
     width: 72px;
+    flex-shrink: 0;
     outline: none;
     background: #2a2a2a;
     color: white;
@@ -77,4 +89,20 @@
     letter-spacing: 1px;
     color: #fff;
     text-shadow: 0 0 8px rgba(255, 255, 255, 0.25);
+}
+
+@media (max-width: 520px) {
+    .container {
+        bottom: 12px;
+        padding: 8px;
+    }
+
+    .colorButton {
+        width: 34px;
+        height: 34px;
+    }
+
+    .colorInput {
+        width: 64px;
+    }
 }
