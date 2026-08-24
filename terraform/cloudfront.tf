@@ -14,11 +14,11 @@ resource "aws_cloudfront_distribution" "hdm_place" {
   }
 
   origin {
-    domain_name = aws_instance.web_application.public_dns
-    origin_id   = "ec2-backend"
+    domain_name = aws_lb.hdm_place.dns_name
+    origin_id   = "ecs-backend"
 
     custom_origin_config {
-      http_port              = 3000
+      http_port              = 80
       https_port             = 443
       origin_protocol_policy = "http-only"
       origin_ssl_protocols   = ["TLSv1.2"]
@@ -42,7 +42,7 @@ resource "aws_cloudfront_distribution" "hdm_place" {
 
   ordered_cache_behavior {
     path_pattern           = "/api/*"
-    target_origin_id       = "ec2-backend"
+    target_origin_id       = "ecs-backend"
     allowed_methods        = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
     cached_methods         = ["GET", "HEAD"]
     viewer_protocol_policy = "redirect-to-https"
@@ -60,7 +60,7 @@ resource "aws_cloudfront_distribution" "hdm_place" {
 
   ordered_cache_behavior {
     path_pattern           = "/ws"
-    target_origin_id       = "ec2-backend"
+    target_origin_id       = "ecs-backend"
     allowed_methods        = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
     cached_methods         = ["GET", "HEAD"]
     viewer_protocol_policy = "redirect-to-https"

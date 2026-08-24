@@ -414,8 +414,6 @@ export default function MapContainer() {
                 }}
                 icon={isDarkmodeEnabled ? faSun : faMoon}
                 style={{
-                    width: 40,
-                    height: 40,
                     position: "absolute",
                     top: 25,
                     right: 25,

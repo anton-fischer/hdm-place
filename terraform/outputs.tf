@@ -1,6 +1,6 @@
-output "server_ip" {
-  description = "The public IP address of the ec2"
-  value       = aws_instance.web_application.public_ip
+output "alb_dns_name" {
+  description = "The DNS name of the ALB in front of the backend"
+  value       = aws_lb.hdm_place.dns_name
 }
 
 output "db_endpoint" {
@@ -16,4 +16,9 @@ output "ecr_url" {
 output "cloudfront_url" {
   description = "The domain name of the cloudfront distribution"
   value       = aws_cloudfront_distribution.hdm_place.domain_name
+}
+
+output "cloudfront_distribution_id" {
+  description = "The ID of the cloudfront distribution, needed for cache invalidations"
+  value       = aws_cloudfront_distribution.hdm_place.id
 }

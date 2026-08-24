@@ -17,6 +17,9 @@ await app.register(leaderboardRoutes)
 await app.register(userRoutes)
 await app.register(websocketHandler)
 
+// Used by the ALB target group health check
+app.get('/health', async () => ({ status: 'ok' }))
+
 const PORT = 3001
 await app.listen({ port: PORT, host: '0.0.0.0' })
 console.log(`Server running on http://localhost:${PORT}`)
