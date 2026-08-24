@@ -20,15 +20,6 @@
 .colorList {
     display: flex;
     gap: 8px;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    align-items: center;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-}
-
-.colorList::-webkit-scrollbar {
-    display: none;
 }
 
 .colorButton {
@@ -93,6 +84,7 @@
 
 @media (max-width: 520px) {
     .container {
+        height: 50px;
         bottom: 12px;
         padding: 8px;
     }

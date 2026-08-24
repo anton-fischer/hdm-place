@@ -1,0 +1,95 @@
+.container {
+    display: flex;
+    align-items: center;
+    padding: 10px 16px;
+    background: rgba(20, 20, 20, 0.9);
+    backdrop-filter: blur(6px);
+    border-radius: 12px;
+    width: 484px;
+    max-width: calc(100vw - 20px);
+    height: 60px;
+    box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.6);
+
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1;
+}
+
+.innerContainer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 10px;
+    min-width: 0;
+}
+
+.usernameInput {
+    flex: 1;
+    min-width: 0;
+    padding: 8px;
+    border-radius: 6px;
+    width: 72px;
+    height: 35px;
+    flex-shrink: 0;
+    outline: none;
+    background: #2e2e2e;
+    color: #fff;
+    font-family: monospace;
+    border: 2px solid transparent;
+    transition: transform 0.1s, border 0.2s;
+}
+
+.usernameInput::placeholder {
+    color: #888;
+}
+
+.usernameInput:focus {
+    border: 2px solid #fff;
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
+}
+
+.confirmButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 35px;
+    height: 35px;
+    border-radius: 6px;
+    border: 2px solid transparent;
+    background: #2e2e2e;
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: transform 0.1s, border 0.2s;
+}
+
+.confirmButton:hover:not(:disabled) {
+    border: 2px solid #fff;
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
+}
+
+.confirmButton:disabled {
+    color: #888;
+    cursor: not-allowed;
+}
+
+@media (max-width: 520px) {
+    .container {
+        bottom: 12px;
+        padding: 8px 12px;
+    }
+
+    .usernameInput {
+        font-size: 13px;
+    }
+
+    .confirmButton {
+        width: 34px;
+        height: 34px;
+        font-size: 14px;
+    }
+}

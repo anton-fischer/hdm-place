@@ -3,7 +3,7 @@
 import { API_URL, COUNTDOWN_TIME } from "../config"
 
 import { useState, useEffect, useRef, useCallback } from "react"
-import { faTriangleExclamation, faSpinner, IconDefinition, faSun, faMoon } from "@fortawesome/free-solid-svg-icons";
+import { faTriangleExclamation, faSpinner, IconDefinition, faSun, faMoon, faTrophy } from "@fortawesome/free-solid-svg-icons";
 import { Toaster } from "react-hot-toast";
 
 import { notifyError, notifySuccess } from "../utils/toast"
@@ -20,6 +20,8 @@ import MessageBox from "./message-box";
 
 import Logger from "../utils/logger";
 import Button from "./button";
+import Leaderboard from "./leaderboard";
+import InputBox from "./input-box";
 
 const GRID_TILE_SIZE = 0.000001; // size of a pixel in the grid
 
@@ -39,11 +41,11 @@ type Pixel = {
 // also contains the logic for chunk loading, handling cooldown, doing backend requests, and more
 export default function MapContainer() {
     const [map, setMap] = useState<mapboxgl.Map | null>(null);
-    const [isDarkmodeEnabled, setIsDarkmodeEnabled] = useState(false);
 
     const [isConnected, setIsConnected] = useState(false);
     const [pixelCount, setPixelCount] = useState(0);
 
+    const [userName, setUserName] = useState<string | null>(null);
     const [selectedColor, setSelectedColor] = useState("");
     const [timeLeft, setTimeLeft] = useState(0);
 
@@ -52,6 +54,8 @@ export default function MapContainer() {
     const [messageText, setMessageText] = useState("");
     const [messageTimer, setMessageTimer] = useState(-1);
 
+    const [isDarkmodeEnabled, setIsDarkmodeEnabled] = useState(false);
+    const [isLeaderboardVisible, setIsLeaderboardVisible] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
 
     const reconnectDelayRef = useRef(1000); // start with 1s, increase with each try up to 30s
@@ -189,8 +193,7 @@ export default function MapContainer() {
     };
 
     // returns existing userId or creates a new one
-    // TODO: make this more robust by replacing local ids e.g. with user accounts?
-    const getOrCreateUserId = () => {
+    /*const getOrCreateUserId = () => {
         // get userId from local storage (should be generated on websocket connect)
         let userId = localStorage.getItem("userId");
 
@@ -201,6 +204,15 @@ export default function MapContainer() {
         }
 
         return userId;
+    };*/
+
+    // called once username is entered in input-box
+    const handleUserNameEntered = (newUserName: string) => {
+        Logger.log("New username was entered:", newUserName);
+        localStorage.setItem("userName", newUserName);
+
+        // TODO backend validation if username is valid and does not already exist
+        setUserName(newUserName);
     };
 
     // creates a mapbox popup with pixel info for a pixel at the given coordinates
@@ -234,9 +246,14 @@ export default function MapContainer() {
             showPixelInfo(x, y, lang, lat);
             return;
         }
+        if (!userName) {
+            Logger.warn("No username entered yet, not placing pixel");
+            showPixelInfo(x, y, lang, lat);
+            return;
+        }
 
         try {
-            const pixel = await placePixel(x, y, selectedColor, getOrCreateUserId());
+            const pixel = await placePixel(x, y, selectedColor, userName);
             Logger.log("Pixel placed:", pixel);
             setTimeLeft(COUNTDOWN_TIME);
         } catch (err: any) {
@@ -261,7 +278,6 @@ export default function MapContainer() {
         }
 
         reconnectDelayRef.current = 1000; // reset delay on success
-        setShowMessage(false);
     };
 
     // updates content of the info box and shows it
@@ -332,9 +348,16 @@ export default function MapContainer() {
                 notifySuccess("Established connection!");
                 setIsConnected(true);
 
-                // check if player is currently on cooldown
-                const userId = getOrCreateUserId();
-                fetchPlayerCooldown(userId);
+                // check if browser has a cached username and if so fetch cooldown
+                let userName = localStorage.getItem("userName");
+                if (userName) {
+                    Logger.log("Using existing username in local storage:", userName);
+                    setUserName(userName);
+                    fetchPlayerCooldown(userName);
+                }
+
+                // hide establishing connection message
+                setShowMessage(false);
             }
 
             socket.onmessage = (event) => {
@@ -414,9 +437,25 @@ export default function MapContainer() {
                 }}
                 icon={isDarkmodeEnabled ? faSun : faMoon}
                 style={{
+                    width: 40,
+                    height: 40,
                     position: "absolute",
                     top: 25,
                     right: 25,
+                    zIndex: 100,
+                }}
+            />
+            <Button
+                onClick={() => {
+                    setIsLeaderboardVisible(!isLeaderboardVisible);
+                }}
+                icon={faTrophy}
+                style={{
+                    width: 40,
+                    height: 40,
+                    position: "absolute",
+                    top: 25,
+                    right: 75,
                     zIndex: 100,
                 }}
             />
@@ -433,7 +472,13 @@ export default function MapContainer() {
                         cursor: "default",
                     }
                 }} />
-            {showMessage ? <MessageBox icon={messageIcon} text={messageText} time={messageTimer} /> : <ColorPicker timeLeft={timeLeft} selectedColor={selectedColor} setSelectedColor={setSelectedColor} />}
+            {isLeaderboardVisible && <Leaderboard />}
+            {/* showing messages has highest prio */
+                showMessage && <MessageBox icon={messageIcon} text={messageText} time={messageTimer} />}
+            {/* show input box if no username is entered yet */
+                !showMessage && !userName && <InputBox onConfirm={handleUserNameEntered} />}
+            {/* if username is entered, only then show color picker */
+                !showMessage && userName && <ColorPicker timeLeft={timeLeft} selectedColor={selectedColor} setSelectedColor={setSelectedColor} />}
             <MapboxMap onMapReady={setMap} />
             {map && <GridOverlay map={map} pixelCache={pixelCacheRef} pixelCount={pixelCount} onPixelClick={handlePixelClick} />}
         </div>
