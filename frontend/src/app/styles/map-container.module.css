@@ -1,4 +1,10 @@
 .popup-pixel-info {
     z-index: 5;
-    color: #747474;
+    color: #5e5e5e;
+}
+
+.popup-pixel-info h3 {
+    border-bottom: 1px solid #5e5e5e;
+    padding-bottom: 3px;
+    margin-bottom: 3px;
 }

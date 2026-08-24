@@ -84,3 +84,22 @@ export async function fetchCooldown(id: string, quiet: boolean = false) {
         throw err;
     }
 }
+
+// sends GET request to backend to fetch the current leaderboard
+export async function fetchLeaderboard(quiet: boolean = false) {
+    const promise = fetch(`${API_URL}/api/leaderboard`).then(async res => {
+        const payload = await res.json();
+        if (!res.ok) throw Object.assign(new Error(payload.error || payload.message || "Server error"), { payload });
+        return payload;
+    });
+
+    console.log(`Sending fetchLeaderboard GET request`);
+    if (!quiet) notifyPromise(promise, "Leaderboard fetched!");
+
+    try {
+        return await promise;
+    } catch (err) {
+        if (!quiet) console.error("Error fetching leaderboard:", err);
+        throw err;
+    }
+}

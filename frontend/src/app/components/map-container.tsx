@@ -225,7 +225,7 @@ export default function MapContainer() {
         if (map) {
             new mapboxgl.Popup({ closeOnClick: true, className: styles["popup-pixel-info"] })
                 .setLngLat([lang, lat])
-                .setHTML(`<p>Coordinates: [${pixel.x}|${pixel.y}]</p><p>Color: ${pixel.color}</p><p>Placed at: ${new Date(pixel.placedAt).toLocaleString()}</p>`)
+                .setHTML(`<h3>${pixel.placedBy}</h3><p>Placed at: ${new Date(pixel.placedAt).toLocaleString()}</p><p>Coords: [ ${pixel.x} | ${pixel.y} ]</p><p>Color: ${pixel.color}</p>`)
                 .addTo(map);
         }
     });
@@ -418,7 +418,10 @@ export default function MapContainer() {
     return (
         <div>
             <img
-                src="/resources/hdm-place-logo.png"
+                src={isDarkmodeEnabled
+                    ? "/resources/hdm-place-logo-white.png"
+                    : "/resources/hdm-place-logo.png"
+                }
                 alt="Logo"
                 style={{
                     position: "absolute",
@@ -431,11 +434,9 @@ export default function MapContainer() {
             />
             <Button
                 onClick={() => {
-                    if (!map) return;
-                    isDarkmodeEnabled ? map.setStyle("mapbox://styles/mapbox/streets-v11") : map.setStyle("mapbox://styles/mapbox/dark-v11");
-                    setIsDarkmodeEnabled(!isDarkmodeEnabled);
+                    setIsLeaderboardVisible(!isLeaderboardVisible);
                 }}
-                icon={isDarkmodeEnabled ? faSun : faMoon}
+                icon={faTrophy}
                 style={{
                     width: 40,
                     height: 40,
@@ -447,9 +448,11 @@ export default function MapContainer() {
             />
             <Button
                 onClick={() => {
-                    setIsLeaderboardVisible(!isLeaderboardVisible);
+                    if (!map) return;
+                    isDarkmodeEnabled ? map.setStyle("mapbox://styles/mapbox/streets-v11") : map.setStyle("mapbox://styles/mapbox/dark-v11");
+                    setIsDarkmodeEnabled(!isDarkmodeEnabled);
                 }}
-                icon={faTrophy}
+                icon={isDarkmodeEnabled ? faSun : faMoon}
                 style={{
                     width: 40,
                     height: 40,
