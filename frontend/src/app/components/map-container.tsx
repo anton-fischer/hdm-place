@@ -52,6 +52,8 @@ export default function MapContainer() {
     const [messageText, setMessageText] = useState("");
     const [messageTimer, setMessageTimer] = useState(-1);
 
+    const [isMobile, setIsMobile] = useState(false);
+
     const reconnectDelayRef = useRef(1000); // start with 1s, increase with each try up to 30s
 
     const pixelCacheRef = useRef<Pixel[]>([]);
@@ -60,6 +62,16 @@ export default function MapContainer() {
     const loadedChunksRef = useRef<Set<string>>(new Set());
     const pendingChunksRef = useRef<Set<string>>(new Set());
     const loadTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    useEffect(() => {
+        const mediaQuery = window.matchMedia("(max-width: 520px)");
+        setIsMobile(mediaQuery.matches);
+
+        const handleChange = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+        mediaQuery.addEventListener("change", handleChange);
+
+        return () => mediaQuery.removeEventListener("change", handleChange);
+    }, []);
 
     useEffect(() => {
         if (timeLeft <= 0) return;
@@ -84,6 +96,13 @@ export default function MapContainer() {
 
         if (pixelMapRef.current.has(key)) {
             pixelMapRef.current.set(key, pixel);
+
+            // replace the outdated pixel in cache with the new one
+            const index = pixelCacheRef.current.findIndex((p) => p.x === pixel.x && p.y === pixel.y);
+            if (index !== -1) pixelCacheRef.current[index] = pixel;
+
+            // then trigger grid redraw
+            setPixelCount((prev) => prev + 1);
             return;
         }
 
@@ -353,7 +372,7 @@ export default function MapContainer() {
                 setIsConnected(false);
 
                 reconnectDelayRef.current = Math.min(reconnectDelayRef.current * 2, 30000); // double time after each try, max 30s
-                setInfoBoxContent(faTriangleExclamation, "Could not connect to server, retrying in:", reconnectDelayRef.current / 1000);
+                setInfoBoxContent(faTriangleExclamation, "Could not reach backend, retrying in:", reconnectDelayRef.current / 1000);
 
                 reconnectTimeout = setTimeout(() => {
                     connect();
@@ -401,17 +420,19 @@ export default function MapContainer() {
                     zIndex: 100,
                 }}
             />
-            <Toaster toastOptions={{
-                position: "bottom-left", style: {
-                    background: "rgba(20, 20, 20, 0.9)",
-                    boxShadow: "0 0 20px 0 rgba(0, 0, 0, 0.6)",
-                    color: "#fff",
-                    fontSize: "13px",
-                    backdropFilter: "blur(6px)",
-                    borderRadius: "12px",
-                    cursor: "default",
-                }
-            }} />
+            <Toaster
+                position={isMobile ? "top-center" : "bottom-left"}
+                toastOptions={{
+                    style: {
+                        background: "rgba(20, 20, 20, 0.9)",
+                        boxShadow: "0 0 20px 0 rgba(0, 0, 0, 0.6)",
+                        color: "#fff",
+                        fontSize: "13px",
+                        backdropFilter: "blur(6px)",
+                        borderRadius: "12px",
+                        cursor: "default",
+                    }
+                }} />
             {showMessage ? <MessageBox icon={messageIcon} text={messageText} time={messageTimer} /> : <ColorPicker timeLeft={timeLeft} selectedColor={selectedColor} setSelectedColor={setSelectedColor} />}
             <MapboxMap onMapReady={setMap} />
             {map && <GridOverlay map={map} pixelCache={pixelCacheRef} pixelCount={pixelCount} onPixelClick={handlePixelClick} />}
