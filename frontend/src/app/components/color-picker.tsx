@@ -28,7 +28,7 @@ export default function ColorPicker({ timeLeft, selectedColor, setSelectedColor 
     const [isCustomColorSelected, setIsCustomColorSelected] = useState(false);
 
     // executes on color click
-    const toggleColor = (color: string) => {       
+    const toggleColor = (color: string) => {
         if (selectedColor === color) {
             setSelectedColor("");
         } else {

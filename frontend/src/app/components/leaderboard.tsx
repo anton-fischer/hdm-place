@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faSpinner, faTrophy, faTriangleExclamation } from "@fortawesome/free-solid-svg-icons";
+import { faSpinner, faTriangleExclamation, faAward } from "@fortawesome/free-solid-svg-icons";
 
 import { fetchLeaderboard } from "../utils/api";
 
@@ -37,8 +37,8 @@ export default function Leaderboard() {
     return (
         <div className={styles.container}>
             <div className={styles.header}>
-                <FontAwesomeIcon icon={faTrophy} className={styles.headerIcon} />
                 <span className={styles.headerText}>Most pixels placed</span>
+                <FontAwesomeIcon icon={faAward} className={styles.headerIcon} />
             </div>
 
             {loading ? (

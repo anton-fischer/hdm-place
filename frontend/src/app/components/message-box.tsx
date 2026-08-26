@@ -6,7 +6,7 @@ import { faSpinner, IconDefinition } from "@fortawesome/free-solid-svg-icons";
 import styles from "../styles/message-box.module.css"
 
 type MessageBoxProps = {
-    icon?: IconDefinition | null;
+    icon?: IconDefinition;
     text?: string;
     time?: number;
 };
@@ -19,13 +19,13 @@ export default function MessageBox({ icon = faSpinner, text = "Placeholder", tim
 
         return `${h}:${m}:${s}`;
     };
-    
+
     return (
         <div className={styles.container}>
             <div className={styles.innerContainer}>
-                <FontAwesomeIcon icon={icon ?? faSpinner} spin={icon === faSpinner} className={styles.icon} />
+                <FontAwesomeIcon icon={icon} spin={icon === faSpinner} className={styles.icon} />
                 <div className={styles.text}>{text}</div>
-                { time >= 0 ? <div className={styles.timer}>{formatTime(time)}</div> : <div></div> }
+                {time >= 0 ? <div className={styles.timer}>{formatTime(time)}</div> : <div></div>}
             </div>
         </div >
     );

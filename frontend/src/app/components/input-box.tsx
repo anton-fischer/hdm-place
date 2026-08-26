@@ -2,38 +2,40 @@
 
 import { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCheck } from "@fortawesome/free-solid-svg-icons";
+import { faChevronCircleRight, IconDefinition } from "@fortawesome/free-solid-svg-icons";
 
 import styles from "../styles/input-box.module.css"
 
 type UsernameInputProps = {
-    onConfirm: (username: string) => void;
+    icon?: IconDefinition;
+    text?: string;
     maxLength?: number;
+    onConfirm: (inputText: string) => void;
 };
 
-export default function UsernameInput({ onConfirm, maxLength = 20 }: UsernameInputProps) {
-    const [username, setUsername] = useState("");
+export default function UsernameInput({ icon = faChevronCircleRight, text = "Placeholder", maxLength = 20, onConfirm }: UsernameInputProps) {
+    const [inputText, setInputText] = useState("");
 
     const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setUsername(e.target.value);
+        setInputText(e.target.value);
     };
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === "Enter" && username.trim().length > 0) {
-            onConfirm(username);
+        if (e.key === "Enter" && inputText.trim().length > 0) {
+            onConfirm(inputText);
         }
     };
 
-    const isValid = username.trim().length > 0;
+    const isValid = inputText.trim().length > 0;
 
     return (
         <div className={styles.container}>
             <div className={styles.innerContainer}>
                 <input
-                    className={styles.usernameInput}
-                    placeholder="Your Username"
+                    className={styles.textInput}
+                    placeholder={text}
                     maxLength={maxLength}
-                    value={username}
+                    value={inputText}
                     onChange={handleInput}
                     onKeyDown={handleKeyDown}
                     autoFocus
@@ -41,9 +43,9 @@ export default function UsernameInput({ onConfirm, maxLength = 20 }: UsernameInp
                 <button
                     className={styles.confirmButton}
                     disabled={!isValid}
-                    onClick={() => onConfirm(username)}
+                    onClick={() => onConfirm(inputText)}
                 >
-                    <FontAwesomeIcon icon={faCheck} />
+                    <FontAwesomeIcon icon={icon} />
                 </button>
             </div>
         </div>

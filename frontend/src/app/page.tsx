@@ -3,9 +3,9 @@
 import MapContainer from "./components/map-container";
 
 export default function Home() {
-  return (
-    <div>
-      <MapContainer />
-    </div>
-  );
+    return (
+        <div>
+            <MapContainer />
+        </div>
+    );
 }

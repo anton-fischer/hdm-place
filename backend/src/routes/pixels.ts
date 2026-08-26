@@ -18,18 +18,14 @@ export async function pixelRoutes(app: FastifyInstance) {
     })
 
     // GET /api/pixels/:x1/:y1/:x2/:y2 - Load canvas area
-    app.get<{ Params: { x1: number; y1: number; x2: number; y2: number } }>(
-        '/api/pixels/:x1/:y1/:x2/:y2',
-        async (req) => {
+    app.get<{ Params: { x1: number; y1: number; x2: number; y2: number } }>('/api/pixels/:x1/:y1/:x2/:y2', async (req) => {
             const { x1, y1, x2, y2 } = req.params
             return await getPixels(x1, y1, x2, y2)
         }
     )
 
     // POST /api/pixel - Place pixel
-    app.post<{ Body: { x: number; y: number; color: string; userId: string } }>(
-        '/api/pixel',
-        async (req, reply) => {
+    app.post<{ Body: { x: number; y: number; color: string; userId: string } }>('/api/pixel', async (req, reply) => {
             const { x, y, color, userId } = req.body
 
             // Validation

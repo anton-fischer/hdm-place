@@ -3,7 +3,7 @@
 import { API_URL, COUNTDOWN_TIME } from "../config"
 
 import { useState, useEffect, useRef, useCallback } from "react"
-import { faTriangleExclamation, faSpinner, IconDefinition, faSun, faMoon, faTrophy } from "@fortawesome/free-solid-svg-icons";
+import { faTriangleExclamation, faSpinner, IconDefinition, faSun, faMoon, faAward } from "@fortawesome/free-solid-svg-icons";
 import { Toaster } from "react-hot-toast";
 
 import { notifyError, notifySuccess } from "../utils/toast"
@@ -436,7 +436,7 @@ export default function MapContainer() {
                 onClick={() => {
                     setIsLeaderboardVisible(!isLeaderboardVisible);
                 }}
-                icon={faTrophy}
+                icon={faAward}
                 style={{
                     width: 40,
                     height: 40,
@@ -479,7 +479,7 @@ export default function MapContainer() {
             {/* showing messages has highest prio */
                 showMessage && <MessageBox icon={messageIcon} text={messageText} time={messageTimer} />}
             {/* show input box if no username is entered yet */
-                !showMessage && !userName && <InputBox onConfirm={handleUserNameEntered} />}
+                !showMessage && !userName && <InputBox text="Choose a username:" onConfirm={handleUserNameEntered} />}
             {/* if username is entered, only then show color picker */
                 !showMessage && userName && <ColorPicker timeLeft={timeLeft} selectedColor={selectedColor} setSelectedColor={setSelectedColor} />}
             <MapboxMap onMapReady={setMap} />

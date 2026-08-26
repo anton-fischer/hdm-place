@@ -5,6 +5,8 @@
 import { API_URL } from "../config"
 import { notifyPromise } from "./toast"
 
+import Logger from "./logger";
+
 // sends POST request to backend to place a single pixel
 export async function placePixel(x: number, y: number, color: string, userId: string, quiet: boolean = false) {
     const promise = fetch(`${API_URL}/api/pixel`, {
@@ -17,13 +19,13 @@ export async function placePixel(x: number, y: number, color: string, userId: st
         return payload;
     });
 
-    console.log(`Sending placePixel POST request: x=${x}, y=${y}, color=${color}, userId=${userId}`);
+    Logger.log(`Sending placePixel POST request: x=${x}, y=${y}, color=${color}, userId=${userId}`);
     if (!quiet) notifyPromise(promise, "Pixel placed!");
 
     try {
         return await promise;
     } catch (err: any) {
-        if (!quiet) console.error("Error placing pixel:", err.message);
+        if (!quiet) Logger.error("Error placing pixel:", err.message);
         throw err;
     }
 }
@@ -36,13 +38,13 @@ export async function fetchPixel(x: number, y: number, quiet: boolean = false) {
         return payload;
     });
 
-    console.log(`Sending fetchPixel GET request: (${x}, ${y})`);
+    Logger.log(`Sending fetchPixel GET request: (${x}, ${y})`);
     if (!quiet) notifyPromise(promise, "Pixel fetched!");
 
     try {
         return await promise;
     } catch (err) {
-        if (!quiet) console.error("Error fetching pixel:", err);
+        if (!quiet) Logger.error("Error fetching pixel:", err);
         throw err;
     }
 }
@@ -55,13 +57,13 @@ export async function fetchPixelArea(x1: number, y1: number, x2: number, y2: num
         return payload;
     });
 
-    console.log(`Sending fetchPixelArea GET request: (${x1},${y1}) to (${x2},${y2})`);
+    Logger.log(`Sending fetchPixelArea GET request: (${x1},${y1}) to (${x2},${y2})`);
     if (!quiet) notifyPromise(promise, "Pixels fetched!");
 
     try {
         return await promise;
     } catch (err) {
-        if (!quiet) console.error("Error fetching pixel area:", err);
+        if (!quiet) Logger.error("Error fetching pixel area:", err);
         throw err;
     }
 }
@@ -74,13 +76,13 @@ export async function fetchCooldown(id: string, quiet: boolean = false) {
         return payload;
     });
 
-    console.log(`Sending fetchCooldown GET request: (${id})`);
+    Logger.log(`Sending fetchCooldown GET request: (${id})`);
     if (!quiet) notifyPromise(promise, "User info fetched!");
 
     try {
         return await promise;
     } catch (err) {
-        if (!quiet) console.error("Error fetching cooldown:", err);
+        if (!quiet) Logger.error("Error fetching cooldown:", err);
         throw err;
     }
 }
@@ -93,13 +95,13 @@ export async function fetchLeaderboard(quiet: boolean = false) {
         return payload;
     });
 
-    console.log(`Sending fetchLeaderboard GET request`);
+    Logger.log(`Sending fetchLeaderboard GET request`);
     if (!quiet) notifyPromise(promise, "Leaderboard fetched!");
 
     try {
         return await promise;
     } catch (err) {
-        if (!quiet) console.error("Error fetching leaderboard:", err);
+        if (!quiet) Logger.error("Error fetching leaderboard:", err);
         throw err;
     }
 }

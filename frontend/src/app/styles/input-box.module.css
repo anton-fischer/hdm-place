@@ -26,7 +26,7 @@
     min-width: 0;
 }
 
-.usernameInput {
+.textInput {
     flex: 1;
     min-width: 0;
     padding: 8px;
@@ -35,18 +35,18 @@
     height: 35px;
     flex-shrink: 0;
     outline: none;
-    background: #2e2e2e;
+    background: #2a2a2a;
     color: #fff;
     font-family: monospace;
     border: 2px solid transparent;
     transition: transform 0.1s, border 0.2s;
 }
 
-.usernameInput::placeholder {
+.textInput::placeholder {
     color: #888;
 }
 
-.usernameInput:focus {
+.textInput:focus {
     border: 2px solid #fff;
     box-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
 }
@@ -59,7 +59,7 @@
     height: 35px;
     border-radius: 6px;
     border: 2px solid transparent;
-    background: #2e2e2e;
+    background: #2a2a2a;
     color: #fff;
     font-size: 16px;
     cursor: pointer;
