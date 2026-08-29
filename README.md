@@ -15,6 +15,7 @@ This project was made by Adrian, Anton and Erik as part of the lecture Software 
 - Prisma
 - Typescript
 - PostgreSQL
+- Vitest
 
 ### AWS Services
 - ECS on Fargate + ALB (Backend)
@@ -55,6 +56,15 @@ The live server will be hosted [here](http://localhost:3000) per default.
 The database will be hosted on Port 5432 per default.
 
 The backend / API will be hosted on Port 3001 per default.
+
+## Testing
+
+### Backend
+
+To run the tests, execute in the backend directory:
+1. `npm install`
+2. `npx prisma generate`
+3. `npm run test` 
 
 ## Deployment
 
