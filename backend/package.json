@@ -2,7 +2,7 @@
   "name": "backend",
   "version": "1.0.0",
   "description": "backend package",
-  "license": "ISC",
+  "license": "MIT",
   "author": "",
   "type": "module",
   "main": "index.js",
@@ -10,7 +10,9 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "test": "vitest"
+    "pretest": "node scripts/migrate-test.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "devDependencies": {
     "@types/node": "^25.6.0",
