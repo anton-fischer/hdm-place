@@ -10,7 +10,13 @@ vi.mock('../../utils/logger', () => ({ default: loggerMock }))
 import { placePixel, fetchPixel, fetchPixelArea, fetchCooldown, fetchLeaderboard } from '../../utils/api'
 
 function mockFetchOnce(body: any, ok = true) {
-    const fetchMock = vi.fn().mockResolvedValue({ ok, json: () => Promise.resolve(body) })
+    const fetchMock = vi.fn().mockResolvedValue({ ok, status: ok ? 200 : 500, text: () => Promise.resolve(JSON.stringify(body)) })
+    vi.stubGlobal('fetch', fetchMock)
+    return fetchMock
+}
+
+function mockFetchOnceWithText(text: string, ok: boolean, status: number) {
+    const fetchMock = vi.fn().mockResolvedValue({ ok, status, text: () => Promise.resolve(text) })
     vi.stubGlobal('fetch', fetchMock)
     return fetchMock
 }
@@ -82,5 +88,10 @@ describe('api', () => {
         mockFetchOnce({ error: 'Pixel not found' }, false)
         await expect(fetchPixel(1, 1, false)).rejects.toThrow('Pixel not found')
         expect(loggerMock.error).toHaveBeenCalledTimes(1)
+    })
+
+    it('throws a readable error instead of a SyntaxError when the response body is not JSON', async () => {
+        mockFetchOnceWithText('<!DOCTYPE html><html><body>503 Service Unavailable</body></html>', false, 503)
+        await expect(fetchLeaderboard(true)).rejects.toThrow('Server error (503)')
     })
 })

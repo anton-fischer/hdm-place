@@ -35,6 +35,11 @@ describe('config', () => {
         await expect(loadConfig({ NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN: undefined })).rejects.toThrow('NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN is missing')
     })
 
+    it('strips a trailing slash from NEXT_PUBLIC_BACKEND_API_URL', async () => {
+        const config = await loadConfig({ NEXT_PUBLIC_BACKEND_API_URL: 'https://example.com/' })
+        expect(config.API_URL).toBe('https://example.com')
+    })
+
     it.each([
         ['true', true],
         ['1', true],

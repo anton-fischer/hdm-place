@@ -2,7 +2,8 @@
 if (!process.env.NEXT_PUBLIC_BACKEND_API_URL) {
     throw new Error("NEXT_PUBLIC_BACKEND_API_URL is missing");
 }
-export const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL;
+// strip a trailing slash so callers can safely do `${API_URL}/path` without a double slash
+export const API_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL.replace(/\/+$/, "");
 
 if (!process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN) {
     throw new Error("NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN is missing");
