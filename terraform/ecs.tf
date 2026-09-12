@@ -108,6 +108,8 @@ resource "aws_ecs_service" "backend" {
   desired_count   = 1
   launch_type     = "FARGATE"
 
+  health_check_grace_period_seconds = 30
+
   network_configuration {
     subnets          = [aws_subnet.public_subnet_ec2.id, aws_subnet.public_subnet_b.id]
     security_groups  = [aws_security_group.sg_ecs_tasks.id]
