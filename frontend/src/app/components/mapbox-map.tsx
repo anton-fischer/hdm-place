@@ -30,7 +30,7 @@ export default function MapboxMap({ onMapReady }: MapboxMapProps) {
             style: "mapbox://styles/mapbox/streets-v11",
             center: [9.10121285846779, 48.74130153428095],
             // uncomment in case area should be limited to the hdm
-            //maxBounds: bounds,
+            maxBounds: bounds,
             zoom: 15,
             minZoom: 14,
             maxZoom: 18,
