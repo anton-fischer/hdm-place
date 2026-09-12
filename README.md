@@ -4,7 +4,7 @@ HdM-Place is a online game inspired by w/place. Players can place pixels on a ma
 
 This project was made by Adrian, Anton and Erik as part of the lecture Software Development for Cloud Computing in the SoSe 2026.
 
-See our blog article for more information on this project: [soon](https://blog.mi.hdm-stuttgart.de/)
+See our blog article for more information on this project: [HdM-Place: Building a r/place clone for our university](https://blog.mi.hdm-stuttgart.de/index.php/2026/09/12/hdm-place-building-a-r-place-clone-for-our-university/)
 
 ## Features
 
